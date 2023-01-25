@@ -14,7 +14,7 @@ export default withAuth(
     session,
     storage,
     server: {
-      port: 3000,
+      port: 8000,
       cors: true,
     },
   }),
