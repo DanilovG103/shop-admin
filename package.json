@@ -7,7 +7,7 @@
     "start": "keystone start",
     "build": "keystone build",
     "postinstall": "keystone postinstall --fix",
-    "deploy": "keystone build && keystone prisma migrate deploy"
+    "deploy": "keystone --reset-db && keystone build && keystone prisma migrate deploy"
   },
   "dependencies": {
     "@keystone-6/auth": "6.0.0",
