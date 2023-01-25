@@ -41,15 +41,18 @@ const { withAuth } = createAuth({
 
   // WARNING: remove initFirstItem functionality in production
   //   see https://keystonejs.com/docs/config/auth#init-first-item for more
-  initFirstItem: {
-    // if there are no items in the database, by configuring this field
-    //   you are asking the Keystone AdminUI to create a new user
-    //   providing inputs for these fields
-    fields: ['name', 'email', 'password'],
+  initFirstItem:
+    process.env.NODE_ENV !== 'production'
+      ? {
+          // if there are no items in the database, by configuring this field
+          //   you are asking the Keystone AdminUI to create a new user
+          //   providing inputs for these fields
+          fields: ['name', 'email', 'password'],
 
-    // it uses context.sudo() to do this, which bypasses any access control you might have
-    //   you shouldn't use this in production
-  },
+          // it uses context.sudo() to do this, which bypasses any access control you might have
+          //   you shouldn't use this in production
+        }
+      : undefined,
 })
 
 // statelessSessions uses cookies for session tracking
