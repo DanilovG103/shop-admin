@@ -135,21 +135,7 @@ var keystone_default = withAuth(
   (0, import_core4.config)({
     db: {
       provider: "sqlite",
-      url: "file:./keystone.db",
-      onConnect: async ({ db }) => {
-        const user = await db.User.findOne({
-          where: { email: "admin@admin.com" }
-        });
-        if (user)
-          return;
-        await db.User.createOne({
-          data: {
-            name: "admin",
-            email: "admin@admin.com",
-            password: "administrator"
-          }
-        });
-      }
+      url: "file:./keystone.db"
     },
     lists,
     session,
