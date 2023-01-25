@@ -38,9 +38,7 @@ var { withAuth } = (0, import_auth.createAuth)({
   identityField: "email",
   sessionData: "name createdAt",
   secretField: "password",
-  initFirstItem: process.env.NODE_ENV !== "production" ? {
-    fields: ["name", "email", "password"]
-  } : void 0
+  initFirstItem: void 0
 });
 var sessionMaxAge = 60 * 60 * 24 * 30;
 var session = (0, import_session.statelessSessions)({
@@ -93,7 +91,7 @@ var import_core2 = require("@keystone-6/core");
 var import_access2 = require("@keystone-6/core/access");
 var import_fields2 = require("@keystone-6/core/fields");
 var userList = (0, import_core2.list)({
-  access: import_access2.denyAll,
+  access: import_access2.allowAll,
   fields: {
     name: (0, import_fields2.text)({ validation: { isRequired: true } }),
     email: (0, import_fields2.text)({
@@ -137,7 +135,21 @@ var keystone_default = withAuth(
   (0, import_core4.config)({
     db: {
       provider: "sqlite",
-      url: "file:./keystone.db"
+      url: "file:./keystone.db",
+      onConnect: async ({ db }) => {
+        const user = await db.User.findOne({
+          where: { email: "admin@admin.com" }
+        });
+        if (user)
+          return;
+        await db.User.createOne({
+          data: {
+            name: "admin",
+            email: "admin@admin.com",
+            password: "administrator"
+          }
+        });
+      }
     },
     lists,
     session,
