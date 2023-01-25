@@ -38,9 +38,9 @@ var { withAuth } = (0, import_auth.createAuth)({
   identityField: "email",
   sessionData: "name createdAt",
   secretField: "password",
-  initFirstItem: {
+  initFirstItem: process.env.NODE_ENV !== "production" ? {
     fields: ["name", "email", "password"]
-  }
+  } : void 0
 });
 var sessionMaxAge = 60 * 60 * 24 * 30;
 var session = (0, import_session.statelessSessions)({
