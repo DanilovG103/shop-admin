@@ -10,21 +10,21 @@ export default withAuth(
       provider: 'sqlite',
       url: 'file:./keystone.db',
       useMigrations: true,
-      // onConnect: async ({ db }) => {
-      //   const user = await db.User.findOne({
-      //     where: { email: 'admin@admin.com' },
-      //   })
+      onConnect: async ({ db }) => {
+        const user = await db.User.findOne({
+          where: { email: 'admin@admin.com' },
+        })
 
-      //   if (user) return
+        if (user) return
 
-      //   await db.User.createOne({
-      //     data: {
-      //       name: 'admin',
-      //       email: 'admin@admin.com',
-      //       password: 'administrator',
-      //     },
-      //   })
-      // },
+        await db.User.createOne({
+          data: {
+            name: 'admin',
+            email: 'admin@admin.com',
+            password: 'administrator',
+          },
+        })
+      },
     },
     lists,
     session,
