@@ -1,5 +1,7 @@
 node_modules
-public/images
+public/images/*.jpeg
+public/images/*.jpg
+public/images/*.png
 .keystone/admin
 keystone.db
 *.log

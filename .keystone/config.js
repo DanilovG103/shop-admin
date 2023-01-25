@@ -124,7 +124,7 @@ var storage = {
   images: {
     kind: "local",
     type: "image",
-    generateUrl: (path) => `${process.env.BASE_URL}/images${path}`,
+    generateUrl: (path) => `${path}`,
     serverRoute: {
       path: "/images"
     },

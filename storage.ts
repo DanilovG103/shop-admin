@@ -4,7 +4,7 @@ export const storage: Record<string, StorageConfig> = {
   images: {
     kind: 'local',
     type: 'image',
-    generateUrl: (path: string) => `${process.env.BASE_URL}/images${path}`,
+    generateUrl: (path: string) => `${path}`,
     serverRoute: {
       path: '/images',
     },
