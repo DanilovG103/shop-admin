@@ -9,6 +9,7 @@ export default withAuth(
     db: {
       provider: 'sqlite',
       url: 'file:./keystone.db',
+      useMigrations: true,
       // onConnect: async ({ db }) => {
       //   const user = await db.User.findOne({
       //     where: { email: 'admin@admin.com' },
