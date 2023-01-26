@@ -13,22 +13,32 @@ generator client {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  name      String    @default("")
-  email     String    @unique @default("")
-  password  String
-  createdAt DateTime? @default(now())
+  id               String    @id @default(cuid())
+  name             String    @default("")
+  email            String    @unique @default("")
+  password         String
+  createdAt        DateTime? @default(now())
+  from_Basket_user Basket[]  @relation("Basket_user")
 }
 
 model Good {
-  id          String    @id @default(cuid())
-  title       String    @default("")
-  description String    @default("")
-  category    String?
-  price       Int
-  promotion   Boolean   @default(false)
-  images      Image[]   @relation("Good_images")
-  createdAt   DateTime? @default(now())
+  id                String    @id @default(cuid())
+  title             String    @default("")
+  description       String    @default("")
+  category          String?
+  price             Int
+  images            Image[]   @relation("Good_images")
+  createdAt         DateTime? @default(now())
+  from_Basket_goods Basket[]  @relation("Basket_goods")
+}
+
+model Basket {
+  id     String  @id @default(cuid())
+  goods  Good[]  @relation("Basket_goods")
+  user   User?   @relation("Basket_user", fields: [userId], references: [id])
+  userId String? @map("user")
+
+  @@index([userId])
 }
 
 model Image {

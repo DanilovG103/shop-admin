@@ -12,16 +12,16 @@ export default withAuth(
       useMigrations: true,
       onConnect: async ({ db }) => {
         const user = await db.User.findOne({
-          where: { email: 'admin@admin.com' },
+          where: { email: process.env.ADMIN_EMAIL },
         })
 
         if (user) return
 
         await db.User.createOne({
           data: {
-            name: 'admin',
-            email: 'admin@admin.com',
-            password: 'administrator',
+            name: process.env.ADMIN_NAME,
+            email: process.env.ADMIN_EMAIL,
+            password: process.env.ADMIN_PASSWORD,
           },
         })
       },

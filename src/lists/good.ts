@@ -1,7 +1,6 @@
 import { list } from '@keystone-6/core'
 import { allowAll } from '@keystone-6/core/access'
 import {
-  checkbox,
   integer,
   relationship,
   select,
@@ -27,7 +26,6 @@ export const goodList = list({
       ],
     }),
     price: integer({ validation: { isRequired: true } }),
-    promotion: checkbox(),
     images: relationship({
       ref: 'Image',
       many: true,

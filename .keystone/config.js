@@ -23,7 +23,7 @@ __export(keystone_exports, {
   default: () => keystone_default
 });
 module.exports = __toCommonJS(keystone_exports);
-var import_core4 = require("@keystone-6/core");
+var import_core5 = require("@keystone-6/core");
 
 // auth.ts
 var import_auth = require("@keystone-6/auth");
@@ -47,32 +47,43 @@ var session = (0, import_session.statelessSessions)({
 });
 
 // schema.ts
-var import_core3 = require("@keystone-6/core");
-var import_access3 = require("@keystone-6/core/access");
-var import_fields3 = require("@keystone-6/core/fields");
+var import_core4 = require("@keystone-6/core");
+var import_access4 = require("@keystone-6/core/access");
+var import_fields4 = require("@keystone-6/core/fields");
 
-// src/lists/good.ts
+// src/lists/basket.ts
 var import_core = require("@keystone-6/core");
 var import_access = require("@keystone-6/core/access");
 var import_fields = require("@keystone-6/core/fields");
-var goodList = (0, import_core.list)({
+var basketList = (0, import_core.list)({
   access: import_access.allowAll,
   fields: {
-    title: (0, import_fields.text)({ validation: { isRequired: true } }),
-    description: (0, import_fields.text)({
+    goods: (0, import_fields.relationship)({ ref: "Good", many: true }),
+    user: (0, import_fields.relationship)({ ref: "User", many: false })
+  }
+});
+
+// src/lists/good.ts
+var import_core2 = require("@keystone-6/core");
+var import_access2 = require("@keystone-6/core/access");
+var import_fields2 = require("@keystone-6/core/fields");
+var goodList = (0, import_core2.list)({
+  access: import_access2.allowAll,
+  fields: {
+    title: (0, import_fields2.text)({ validation: { isRequired: true } }),
+    description: (0, import_fields2.text)({
       validation: { isRequired: true },
       ui: { displayMode: "textarea" }
     }),
-    category: (0, import_fields.select)({
+    category: (0, import_fields2.select)({
       options: [
         { label: "Male", value: "MALE" /* MALE */ },
         { label: "Female", value: "FEMALE" /* FEMALE */ },
         { label: "Kids", value: "KIDS" /* KIDS */ }
       ]
     }),
-    price: (0, import_fields.integer)({ validation: { isRequired: true } }),
-    promotion: (0, import_fields.checkbox)(),
-    images: (0, import_fields.relationship)({
+    price: (0, import_fields2.integer)({ validation: { isRequired: true } }),
+    images: (0, import_fields2.relationship)({
       ref: "Image",
       many: true,
       ui: {
@@ -82,24 +93,24 @@ var goodList = (0, import_core.list)({
         inlineEdit: { fields: ["image"] }
       }
     }),
-    createdAt: (0, import_fields.timestamp)({ defaultValue: { kind: "now" } })
+    createdAt: (0, import_fields2.timestamp)({ defaultValue: { kind: "now" } })
   }
 });
 
 // src/lists/user.ts
-var import_core2 = require("@keystone-6/core");
-var import_access2 = require("@keystone-6/core/access");
-var import_fields2 = require("@keystone-6/core/fields");
-var userList = (0, import_core2.list)({
-  access: import_access2.allowAll,
+var import_core3 = require("@keystone-6/core");
+var import_access3 = require("@keystone-6/core/access");
+var import_fields3 = require("@keystone-6/core/fields");
+var userList = (0, import_core3.list)({
+  access: import_access3.allowAll,
   fields: {
-    name: (0, import_fields2.text)({ validation: { isRequired: true } }),
-    email: (0, import_fields2.text)({
+    name: (0, import_fields3.text)({ validation: { isRequired: true } }),
+    email: (0, import_fields3.text)({
       validation: { isRequired: true },
       isIndexed: "unique"
     }),
-    password: (0, import_fields2.password)({ validation: { isRequired: true } }),
-    createdAt: (0, import_fields2.timestamp)({
+    password: (0, import_fields3.password)({ validation: { isRequired: true } }),
+    createdAt: (0, import_fields3.timestamp)({
       defaultValue: { kind: "now" }
     })
   }
@@ -109,10 +120,11 @@ var userList = (0, import_core2.list)({
 var lists = {
   User: userList,
   Good: goodList,
-  Image: (0, import_core3.list)({
-    access: import_access3.allowAll,
+  Basket: basketList,
+  Image: (0, import_core4.list)({
+    access: import_access4.allowAll,
     fields: {
-      image: (0, import_fields3.image)({ storage: "images" })
+      image: (0, import_fields4.image)({ storage: "images" })
     }
   })
 };
@@ -122,7 +134,7 @@ var storage = {
   images: {
     kind: "local",
     type: "image",
-    generateUrl: (path) => `${path}`,
+    generateUrl: (path) => `http://localhost:8000/images${path}`,
     serverRoute: {
       path: "/images"
     },
@@ -132,22 +144,22 @@ var storage = {
 
 // keystone.ts
 var keystone_default = withAuth(
-  (0, import_core4.config)({
+  (0, import_core5.config)({
     db: {
       provider: "sqlite",
       url: "file:./keystone.db",
       useMigrations: true,
       onConnect: async ({ db }) => {
         const user = await db.User.findOne({
-          where: { email: "admin@admin.com" }
+          where: { email: process.env.ADMIN_EMAIL }
         });
         if (user)
           return;
         await db.User.createOne({
           data: {
-            name: "admin",
-            email: "admin@admin.com",
-            password: "administrator"
+            name: process.env.ADMIN_NAME,
+            email: process.env.ADMIN_EMAIL,
+            password: process.env.ADMIN_PASSWORD
           }
         });
       }
