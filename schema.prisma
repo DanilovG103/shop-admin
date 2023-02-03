@@ -25,20 +25,41 @@ model Good {
   id                String    @id @default(cuid())
   title             String    @default("")
   description       String    @default("")
+  brand             Brand?    @relation("Good_brand", fields: [brandId], references: [id])
+  brandId           String?   @map("brand")
   category          String?
   price             Int
   images            Image[]   @relation("Good_images")
   createdAt         DateTime? @default(now())
   from_Basket_goods Basket[]  @relation("Basket_goods")
+
+  @@index([brandId])
 }
 
 model Basket {
-  id     String  @id @default(cuid())
-  goods  Good[]  @relation("Basket_goods")
-  user   User?   @relation("Basket_user", fields: [userId], references: [id])
-  userId String? @map("user")
+  id                String    @id @default(cuid())
+  goods             Good[]    @relation("Basket_goods")
+  user              User?     @relation("Basket_user", fields: [userId], references: [id])
+  userId            String?   @map("user")
+  from_Request_data Request[] @relation("Request_data")
 
   @@index([userId])
+}
+
+model Brand {
+  id              String @id @default(cuid())
+  title           String @default("")
+  from_Good_brand Good[] @relation("Good_brand")
+}
+
+model Request {
+  id           String  @id @default(cuid())
+  data         Basket? @relation("Request_data", fields: [dataId], references: [id])
+  dataId       String? @map("data")
+  status       String?
+  rejectReason String  @default("")
+
+  @@index([dataId])
 }
 
 model Image {

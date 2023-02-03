@@ -115,11 +115,18 @@ type Good {
   id: ID!
   title: String
   description: String
-  category: String
+  brand: Brand
+  category: GoodCategoryType
   price: Int
   images(where: ImageWhereInput! = {}, orderBy: [ImageOrderByInput!]! = [], take: Int, skip: Int! = 0): [Image!]
   imagesCount(where: ImageWhereInput! = {}): Int
   createdAt: DateTime
+}
+
+enum GoodCategoryType {
+  MALE
+  FEMALE
+  KIDS
 }
 
 input GoodWhereUniqueInput {
@@ -133,38 +140,18 @@ input GoodWhereInput {
   id: IDFilter
   title: StringFilter
   description: StringFilter
-  category: StringNullableFilter
+  brand: BrandWhereInput
+  category: GoodCategoryTypeNullableFilter
   price: IntFilter
   images: ImageManyRelationFilter
   createdAt: DateTimeNullableFilter
 }
 
-input StringNullableFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  not: NestedStringNullableFilter
-}
-
-input NestedStringNullableFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  not: NestedStringNullableFilter
+input GoodCategoryTypeNullableFilter {
+  equals: GoodCategoryType
+  in: [GoodCategoryType!]
+  notIn: [GoodCategoryType!]
+  not: GoodCategoryTypeNullableFilter
 }
 
 input IntFilter {
@@ -196,10 +183,17 @@ input GoodOrderByInput {
 input GoodUpdateInput {
   title: String
   description: String
-  category: String
+  brand: BrandRelateToOneForUpdateInput
+  category: GoodCategoryType
   price: Int
   images: ImageRelateToManyForUpdateInput
   createdAt: DateTime
+}
+
+input BrandRelateToOneForUpdateInput {
+  create: BrandCreateInput
+  connect: BrandWhereUniqueInput
+  disconnect: Boolean
 }
 
 input ImageRelateToManyForUpdateInput {
@@ -217,10 +211,16 @@ input GoodUpdateArgs {
 input GoodCreateInput {
   title: String
   description: String
-  category: String
+  brand: BrandRelateToOneForCreateInput
+  category: GoodCategoryType
   price: Int
   images: ImageRelateToManyForCreateInput
   createdAt: DateTime
+}
+
+input BrandRelateToOneForCreateInput {
+  create: BrandCreateInput
+  connect: BrandWhereUniqueInput
 }
 
 input ImageRelateToManyForCreateInput {
@@ -294,6 +294,109 @@ input GoodRelateToManyForCreateInput {
 input UserRelateToOneForCreateInput {
   create: UserCreateInput
   connect: UserWhereUniqueInput
+}
+
+type Brand {
+  id: ID!
+  title: String
+}
+
+input BrandWhereUniqueInput {
+  id: ID
+}
+
+input BrandWhereInput {
+  AND: [BrandWhereInput!]
+  OR: [BrandWhereInput!]
+  NOT: [BrandWhereInput!]
+  id: IDFilter
+  title: StringFilter
+}
+
+input BrandOrderByInput {
+  id: OrderDirection
+  title: OrderDirection
+}
+
+input BrandUpdateInput {
+  title: String
+}
+
+input BrandUpdateArgs {
+  where: BrandWhereUniqueInput!
+  data: BrandUpdateInput!
+}
+
+input BrandCreateInput {
+  title: String
+}
+
+type Request {
+  id: ID!
+  data: Basket
+  status: RequestStatusType
+  rejectReason: String
+}
+
+enum RequestStatusType {
+  PENDING
+  FULFILLED
+  REJECTED
+}
+
+input RequestWhereUniqueInput {
+  id: ID
+}
+
+input RequestWhereInput {
+  AND: [RequestWhereInput!]
+  OR: [RequestWhereInput!]
+  NOT: [RequestWhereInput!]
+  id: IDFilter
+  data: BasketWhereInput
+  status: RequestStatusTypeNullableFilter
+  rejectReason: StringFilter
+}
+
+input RequestStatusTypeNullableFilter {
+  equals: RequestStatusType
+  in: [RequestStatusType!]
+  notIn: [RequestStatusType!]
+  not: RequestStatusTypeNullableFilter
+}
+
+input RequestOrderByInput {
+  id: OrderDirection
+  status: OrderDirection
+  rejectReason: OrderDirection
+}
+
+input RequestUpdateInput {
+  data: BasketRelateToOneForUpdateInput
+  status: RequestStatusType
+  rejectReason: String
+}
+
+input BasketRelateToOneForUpdateInput {
+  create: BasketCreateInput
+  connect: BasketWhereUniqueInput
+  disconnect: Boolean
+}
+
+input RequestUpdateArgs {
+  where: RequestWhereUniqueInput!
+  data: RequestUpdateInput!
+}
+
+input RequestCreateInput {
+  data: BasketRelateToOneForCreateInput
+  status: RequestStatusType
+  rejectReason: String
+}
+
+input BasketRelateToOneForCreateInput {
+  create: BasketCreateInput
+  connect: BasketWhereUniqueInput
 }
 
 type Image {
@@ -376,6 +479,18 @@ type Mutation {
   updateBaskets(data: [BasketUpdateArgs!]!): [Basket]
   deleteBasket(where: BasketWhereUniqueInput!): Basket
   deleteBaskets(where: [BasketWhereUniqueInput!]!): [Basket]
+  createBrand(data: BrandCreateInput!): Brand
+  createBrands(data: [BrandCreateInput!]!): [Brand]
+  updateBrand(where: BrandWhereUniqueInput!, data: BrandUpdateInput!): Brand
+  updateBrands(data: [BrandUpdateArgs!]!): [Brand]
+  deleteBrand(where: BrandWhereUniqueInput!): Brand
+  deleteBrands(where: [BrandWhereUniqueInput!]!): [Brand]
+  createRequest(data: RequestCreateInput!): Request
+  createRequests(data: [RequestCreateInput!]!): [Request]
+  updateRequest(where: RequestWhereUniqueInput!, data: RequestUpdateInput!): Request
+  updateRequests(data: [RequestUpdateArgs!]!): [Request]
+  deleteRequest(where: RequestWhereUniqueInput!): Request
+  deleteRequests(where: [RequestWhereUniqueInput!]!): [Request]
   createImage(data: ImageCreateInput!): Image
   createImages(data: [ImageCreateInput!]!): [Image]
   updateImage(where: ImageWhereUniqueInput!, data: ImageUpdateInput!): Image
@@ -407,6 +522,12 @@ type Query {
   baskets(where: BasketWhereInput! = {}, orderBy: [BasketOrderByInput!]! = [], take: Int, skip: Int! = 0): [Basket!]
   basket(where: BasketWhereUniqueInput!): Basket
   basketsCount(where: BasketWhereInput! = {}): Int
+  brands(where: BrandWhereInput! = {}, orderBy: [BrandOrderByInput!]! = [], take: Int, skip: Int! = 0): [Brand!]
+  brand(where: BrandWhereUniqueInput!): Brand
+  brandsCount(where: BrandWhereInput! = {}): Int
+  requests(where: RequestWhereInput! = {}, orderBy: [RequestOrderByInput!]! = [], take: Int, skip: Int! = 0): [Request!]
+  request(where: RequestWhereUniqueInput!): Request
+  requestsCount(where: RequestWhereInput! = {}): Int
   images(where: ImageWhereInput! = {}, orderBy: [ImageOrderByInput!]! = [], take: Int, skip: Int! = 0): [Image!]
   image(where: ImageWhereUniqueInput!): Image
   imagesCount(where: ImageWhereInput! = {}): Int

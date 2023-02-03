@@ -1,6 +1,7 @@
 import { list } from '@keystone-6/core'
 import { allowAll } from '@keystone-6/core/access'
 import {
+  image,
   integer,
   relationship,
   select,
@@ -18,23 +19,19 @@ export const goodList = list({
       validation: { isRequired: true },
       ui: { displayMode: 'textarea' },
     }),
+    brand: relationship({ ref: 'Brand' }),
     category: select({
       options: [
-        { label: 'Male', value: Category.MALE },
-        { label: 'Female', value: Category.FEMALE },
-        { label: 'Kids', value: Category.KIDS },
+        { label: 'Мужская', value: Category.MALE },
+        { label: 'Женская', value: Category.FEMALE },
+        { label: 'Детская', value: Category.KIDS },
       ],
+      type: 'enum',
     }),
     price: integer({ validation: { isRequired: true } }),
     images: relationship({
       ref: 'Image',
       many: true,
-      ui: {
-        displayMode: 'cards',
-        cardFields: ['image'],
-        inlineCreate: { fields: ['image'] },
-        inlineEdit: { fields: ['image'] },
-      },
     }),
     createdAt: timestamp({ defaultValue: { kind: 'now' } }),
   },

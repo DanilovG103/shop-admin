@@ -23,7 +23,7 @@ __export(keystone_exports, {
   default: () => keystone_default
 });
 module.exports = __toCommonJS(keystone_exports);
-var import_core5 = require("@keystone-6/core");
+var import_core7 = require("@keystone-6/core");
 
 // auth.ts
 var import_auth = require("@keystone-6/auth");
@@ -47,9 +47,9 @@ var session = (0, import_session.statelessSessions)({
 });
 
 // schema.ts
-var import_core4 = require("@keystone-6/core");
-var import_access4 = require("@keystone-6/core/access");
-var import_fields4 = require("@keystone-6/core/fields");
+var import_core6 = require("@keystone-6/core");
+var import_access6 = require("@keystone-6/core/access");
+var import_fields6 = require("@keystone-6/core/fields");
 
 // src/lists/basket.ts
 var import_core = require("@keystone-6/core");
@@ -75,23 +75,19 @@ var goodList = (0, import_core2.list)({
       validation: { isRequired: true },
       ui: { displayMode: "textarea" }
     }),
+    brand: (0, import_fields2.relationship)({ ref: "Brand" }),
     category: (0, import_fields2.select)({
       options: [
-        { label: "Male", value: "MALE" /* MALE */ },
-        { label: "Female", value: "FEMALE" /* FEMALE */ },
-        { label: "Kids", value: "KIDS" /* KIDS */ }
-      ]
+        { label: "\u041C\u0443\u0436\u0441\u043A\u0430\u044F", value: "MALE" /* MALE */ },
+        { label: "\u0416\u0435\u043D\u0441\u043A\u0430\u044F", value: "FEMALE" /* FEMALE */ },
+        { label: "\u0414\u0435\u0442\u0441\u043A\u0430\u044F", value: "KIDS" /* KIDS */ }
+      ],
+      type: "enum"
     }),
     price: (0, import_fields2.integer)({ validation: { isRequired: true } }),
     images: (0, import_fields2.relationship)({
       ref: "Image",
-      many: true,
-      ui: {
-        displayMode: "cards",
-        cardFields: ["image"],
-        inlineCreate: { fields: ["image"] },
-        inlineEdit: { fields: ["image"] }
-      }
+      many: true
     }),
     createdAt: (0, import_fields2.timestamp)({ defaultValue: { kind: "now" } })
   }
@@ -116,15 +112,51 @@ var userList = (0, import_core3.list)({
   }
 });
 
+// src/lists/brand.ts
+var import_core4 = require("@keystone-6/core");
+var import_access4 = require("@keystone-6/core/access");
+var import_fields4 = require("@keystone-6/core/fields");
+var brandList = (0, import_core4.list)({
+  access: import_access4.allowAll,
+  fields: {
+    title: (0, import_fields4.text)({ validation: { isRequired: true } })
+  }
+});
+
+// src/lists/requests.ts
+var import_core5 = require("@keystone-6/core");
+var import_access5 = require("@keystone-6/core/access");
+var import_fields5 = require("@keystone-6/core/fields");
+var requestsList = (0, import_core5.list)({
+  access: import_access5.allowAll,
+  fields: {
+    data: (0, import_fields5.relationship)({
+      ref: "Basket",
+      many: false
+    }),
+    status: (0, import_fields5.select)({
+      options: [
+        { label: "\u041E\u0436\u0438\u0434\u0430\u043D\u0438\u0435", value: "PENDING" /* PENDING */ },
+        { label: "\u041F\u0440\u0438\u043D\u044F\u0442", value: "FULFILLED" /* FULFILLED */ },
+        { label: "\u041E\u0442\u043A\u043B\u043E\u043D\u0435\u043D", value: "REJECTED" /* REJECTED */ }
+      ],
+      type: "enum"
+    }),
+    rejectReason: (0, import_fields5.text)()
+  }
+});
+
 // schema.ts
 var lists = {
   User: userList,
   Good: goodList,
   Basket: basketList,
-  Image: (0, import_core4.list)({
-    access: import_access4.allowAll,
+  Brand: brandList,
+  Request: requestsList,
+  Image: (0, import_core6.list)({
+    access: import_access6.allowAll,
     fields: {
-      image: (0, import_fields4.image)({ storage: "images" })
+      image: (0, import_fields6.image)({ storage: "images" })
     }
   })
 };
@@ -144,7 +176,7 @@ var storage = {
 
 // keystone.ts
 var keystone_default = withAuth(
-  (0, import_core5.config)({
+  (0, import_core7.config)({
     db: {
       provider: "sqlite",
       url: "file:./keystone.db",
