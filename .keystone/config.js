@@ -52,6 +52,7 @@ var import_access6 = require("@keystone-6/core/access");
 var import_fields6 = require("@keystone-6/core/fields");
 
 // src/lists/basket.ts
+var import_schema = require("@graphql-ts/schema");
 var import_core = require("@keystone-6/core");
 var import_access = require("@keystone-6/core/access");
 var import_fields = require("@keystone-6/core/fields");
@@ -59,7 +60,26 @@ var basketList = (0, import_core.list)({
   access: import_access.allowAll,
   fields: {
     goods: (0, import_fields.relationship)({ ref: "Good", many: true }),
-    user: (0, import_fields.relationship)({ ref: "User", many: false })
+    user: (0, import_fields.relationship)({ ref: "User", many: false }),
+    sum: (0, import_fields.virtual)({
+      field: import_schema.graphql.field({
+        type: import_schema.graphql.Int,
+        async resolve(item, args, ctx) {
+          const data = await ctx.query.Basket.findMany({
+            where: {
+              user: {
+                id: {
+                  equals: item.userId
+                }
+              }
+            },
+            query: "goods { price }"
+          });
+          const resolved = data[0] ? data[0].goods.map((el) => el.price) : [];
+          return resolved.reduce((acc, curr) => acc + curr, 0);
+        }
+      })
+    })
   }
 });
 
@@ -109,6 +129,18 @@ var userList = (0, import_core3.list)({
     createdAt: (0, import_fields3.timestamp)({
       defaultValue: { kind: "now" }
     })
+  },
+  hooks: {
+    afterOperation({ operation, item, context }) {
+      if (operation === "create") {
+        context.db.Basket.createOne({
+          data: {
+            goods: { create: [] },
+            user: { connect: { id: item.id } }
+          }
+        });
+      }
+    }
   }
 });
 
@@ -175,26 +207,27 @@ var storage = {
 };
 
 // keystone.ts
+var onConnect = async (ctx) => {
+  const user = await ctx.db.User.findOne({
+    where: { email: process.env.ADMIN_EMAIL }
+  });
+  if (user)
+    return;
+  await ctx.db.User.createOne({
+    data: {
+      name: process.env.ADMIN_NAME,
+      email: process.env.ADMIN_EMAIL,
+      password: process.env.ADMIN_PASSWORD
+    }
+  });
+};
 var keystone_default = withAuth(
   (0, import_core7.config)({
     db: {
       provider: "sqlite",
       url: "file:./keystone.db",
       useMigrations: true,
-      onConnect: async ({ db }) => {
-        const user = await db.User.findOne({
-          where: { email: process.env.ADMIN_EMAIL }
-        });
-        if (user)
-          return;
-        await db.User.createOne({
-          data: {
-            name: process.env.ADMIN_NAME,
-            email: process.env.ADMIN_EMAIL,
-            password: process.env.ADMIN_PASSWORD
-          }
-        });
-      }
+      onConnect
     },
     lists,
     session,

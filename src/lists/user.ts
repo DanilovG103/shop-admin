@@ -15,4 +15,16 @@ export const userList = list({
       defaultValue: { kind: 'now' },
     }),
   },
+  hooks: {
+    afterOperation({ operation, item, context }) {
+      if (operation === 'create') {
+        context.db.Basket.createOne({
+          data: {
+            goods: { create: [] },
+            user: { connect: { id: item.id } },
+          },
+        })
+      }
+    },
+  },
 })

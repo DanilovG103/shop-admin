@@ -1,7 +1,6 @@
 import { list } from '@keystone-6/core'
 import { allowAll } from '@keystone-6/core/access'
 import {
-  image,
   integer,
   relationship,
   select,

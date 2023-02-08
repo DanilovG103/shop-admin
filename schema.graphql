@@ -233,6 +233,7 @@ type Basket {
   goods(where: GoodWhereInput! = {}, orderBy: [GoodOrderByInput!]! = [], take: Int, skip: Int! = 0): [Good!]
   goodsCount(where: GoodWhereInput! = {}): Int
   user: User
+  sum: Int
 }
 
 input BasketWhereUniqueInput {
