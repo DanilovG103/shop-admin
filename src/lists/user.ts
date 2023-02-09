@@ -11,17 +11,36 @@ export const userList = list({
       isIndexed: 'unique',
     }),
     password: password({ validation: { isRequired: true } }),
+    basketId: text({
+      ui: {
+        createView: {
+          fieldMode: 'hidden',
+        },
+        itemView: {
+          fieldMode: 'read',
+        },
+      },
+    }),
     createdAt: timestamp({
       defaultValue: { kind: 'now' },
     }),
   },
   hooks: {
-    afterOperation({ operation, item, context }) {
+    async afterOperation({ operation, item, context }) {
       if (operation === 'create') {
-        context.db.Basket.createOne({
+        const basket = await context.db.Basket.createOne({
           data: {
             goods: { create: [] },
             user: { connect: { id: item.id } },
+          },
+        })
+
+        await context.db.User.updateOne({
+          where: {
+            id: item.id.toString(),
+          },
+          data: {
+            basketId: basket.id,
           },
         })
       }

@@ -37,8 +37,7 @@ var { withAuth } = (0, import_auth.createAuth)({
   listKey: "User",
   identityField: "email",
   sessionData: "name createdAt",
-  secretField: "password",
-  initFirstItem: void 0
+  secretField: "password"
 });
 var sessionMaxAge = 60 * 60 * 24 * 30;
 var session = (0, import_session.statelessSessions)({
@@ -109,6 +108,30 @@ var goodList = (0, import_core2.list)({
       ref: "Image",
       many: true
     }),
+    isInBasket: (0, import_fields2.virtual)({
+      field: import_core2.graphql.field({
+        type: import_core2.graphql.Boolean,
+        async resolve(item, _, ctx) {
+          if (!ctx.session?.itemId) {
+            return false;
+          }
+          const userId = ctx.session.itemId;
+          const user = await ctx.db.User.findOne({
+            where: {
+              id: userId
+            }
+          });
+          const basket = await ctx.query.Basket.findOne({
+            where: {
+              id: typeof user?.basketId === "string" ? user.basketId : ""
+            },
+            query: "goods { id }"
+          });
+          const ids = basket.goods.map((good) => good.id);
+          return ids.includes(item.id);
+        }
+      })
+    }),
     createdAt: (0, import_fields2.timestamp)({ defaultValue: { kind: "now" } })
   }
 });
@@ -126,17 +149,35 @@ var userList = (0, import_core3.list)({
       isIndexed: "unique"
     }),
     password: (0, import_fields3.password)({ validation: { isRequired: true } }),
+    basketId: (0, import_fields3.text)({
+      ui: {
+        createView: {
+          fieldMode: "hidden"
+        },
+        itemView: {
+          fieldMode: "read"
+        }
+      }
+    }),
     createdAt: (0, import_fields3.timestamp)({
       defaultValue: { kind: "now" }
     })
   },
   hooks: {
-    afterOperation({ operation, item, context }) {
+    async afterOperation({ operation, item, context }) {
       if (operation === "create") {
-        context.db.Basket.createOne({
+        const basket = await context.db.Basket.createOne({
           data: {
             goods: { create: [] },
             user: { connect: { id: item.id } }
+          }
+        });
+        await context.db.User.updateOne({
+          where: {
+            id: item.id.toString()
+          },
+          data: {
+            basketId: basket.id
           }
         });
       }
@@ -172,7 +213,8 @@ var requestsList = (0, import_core5.list)({
         { label: "\u041F\u0440\u0438\u043D\u044F\u0442", value: "FULFILLED" /* FULFILLED */ },
         { label: "\u041E\u0442\u043A\u043B\u043E\u043D\u0435\u043D", value: "REJECTED" /* REJECTED */ }
       ],
-      type: "enum"
+      type: "enum",
+      defaultValue: "PENDING" /* PENDING */
     }),
     rejectReason: (0, import_fields5.text)()
   }
@@ -198,7 +240,7 @@ var storage = {
   images: {
     kind: "local",
     type: "image",
-    generateUrl: (path) => `http://localhost:8000/images${path}`,
+    generateUrl: (path) => `/images${path}`,
     serverRoute: {
       path: "/images"
     },

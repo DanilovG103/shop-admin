@@ -1,4 +1,4 @@
-import { list } from '@keystone-6/core'
+import { graphql, list } from '@keystone-6/core'
 import { allowAll } from '@keystone-6/core/access'
 import {
   integer,
@@ -6,9 +6,14 @@ import {
   select,
   text,
   timestamp,
+  virtual,
 } from '@keystone-6/core/fields'
 
 import { Category } from '../enums/category'
+
+interface Item {
+  id: string
+}
 
 export const goodList = list({
   access: allowAll,
@@ -31,6 +36,35 @@ export const goodList = list({
     images: relationship({
       ref: 'Image',
       many: true,
+    }),
+    isInBasket: virtual({
+      field: graphql.field({
+        type: graphql.Boolean,
+        async resolve(item, _, ctx) {
+          if (!ctx.session?.itemId) {
+            return false
+          }
+
+          const userId = ctx.session.itemId
+
+          const user = await ctx.db.User.findOne({
+            where: {
+              id: userId,
+            },
+          })
+
+          const basket = await ctx.query.Basket.findOne({
+            where: {
+              id: typeof user?.basketId === 'string' ? user.basketId : '',
+            },
+            query: 'goods { id }',
+          })
+
+          const ids = basket.goods.map((good: Item) => good.id)
+
+          return ids.includes((item as Item).id)
+        },
+      }),
     }),
     createdAt: timestamp({ defaultValue: { kind: 'now' } }),
   },

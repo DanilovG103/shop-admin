@@ -17,6 +17,7 @@ model User {
   name             String    @default("")
   email            String    @unique @default("")
   password         String
+  basketId         String    @default("")
   createdAt        DateTime? @default(now())
   from_Basket_user Basket[]  @relation("Basket_user")
 }
@@ -56,7 +57,7 @@ model Request {
   id           String  @id @default(cuid())
   data         Basket? @relation("Request_data", fields: [dataId], references: [id])
   dataId       String? @map("data")
-  status       String?
+  status       String? @default("PENDING")
   rejectReason String  @default("")
 
   @@index([dataId])

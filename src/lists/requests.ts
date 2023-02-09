@@ -18,6 +18,7 @@ export const requestsList = list({
         { label: 'Отклонен', value: RequestStatus.REJECTED },
       ],
       type: 'enum',
+      defaultValue: RequestStatus.PENDING,
     }),
     rejectReason: text(),
   },
