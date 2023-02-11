@@ -1,11 +1,12 @@
-import { config } from '@keystone-6/core'
-import type { KeystoneContext } from '@keystone-6/core/dist/declarations/src/types'
+import { config, graphql } from '@keystone-6/core'
+import type { Context } from '@keystone-6/core/dist/declarations/src/types/schema/graphql-ts-schema'
 
 import { session, withAuth } from './auth'
 import { lists } from './schema'
+import { registration } from './src/ext'
 import { storage } from './storage'
 
-const onConnect = async (ctx: KeystoneContext) => {
+const onConnect = async (ctx: Context) => {
   const user = await ctx.db.User.findOne({
     where: { email: process.env.ADMIN_EMAIL },
   })
@@ -36,5 +37,12 @@ export default withAuth(
       port: 8000,
       cors: true,
     },
+    extendGraphqlSchema: graphql.extend((base) => {
+      return {
+        mutation: {
+          registration: registration(base),
+        },
+      }
+    }),
   }),
 )
