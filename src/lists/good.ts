@@ -10,6 +10,7 @@ import {
 } from '@keystone-6/core/fields'
 
 import { Category } from '../enums/category'
+import { getUserFromSession } from '../utils'
 
 interface Item {
   id: string
@@ -41,26 +42,51 @@ export const goodList = list({
       field: graphql.field({
         type: graphql.Boolean,
         async resolve(item, _, ctx) {
-          if (!ctx.session?.itemId) {
+          const user = await getUserFromSession(ctx, 'basketId', false)
+
+          if (!user) {
             return false
           }
 
-          const userId = ctx.session.itemId
-
-          const user = await ctx.db.User.findOne({
-            where: {
-              id: userId,
-            },
-          })
-
           const basket = await ctx.query.Basket.findOne({
             where: {
-              id: typeof user?.basketId === 'string' ? user.basketId : '',
+              id: user.basketId,
             },
             query: 'goods { id }',
           })
 
+          if (basket === null) {
+            return false
+          }
+
           const ids = basket.goods.map((good: Item) => good.id)
+
+          return ids.includes((item as Item).id)
+        },
+      }),
+    }),
+    isInFavorite: virtual({
+      field: graphql.field({
+        type: graphql.Boolean,
+        async resolve(item, _, ctx) {
+          const user = await getUserFromSession(ctx, 'favoritesId', false)
+
+          if (!user) {
+            return false
+          }
+
+          const favorites = await ctx.query.Favorite.findOne({
+            where: {
+              id: user.favoritesId,
+            },
+            query: 'goods { id }',
+          })
+
+          if (favorites === null) {
+            return false
+          }
+
+          const ids = favorites.goods.map((good: Item) => good.id)
 
           return ids.includes((item as Item).id)
         },

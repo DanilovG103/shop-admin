@@ -7,6 +7,7 @@ type User {
   email: String
   password: PasswordState
   basketId: String
+  favoritesId: String
   createdAt: DateTime
 }
 
@@ -29,6 +30,7 @@ input UserWhereInput {
   name: StringFilter
   email: StringFilter
   basketId: StringFilter
+  favoritesId: StringFilter
   createdAt: DateTimeNullableFilter
 }
 
@@ -87,6 +89,7 @@ input UserOrderByInput {
   name: OrderDirection
   email: OrderDirection
   basketId: OrderDirection
+  favoritesId: OrderDirection
   createdAt: OrderDirection
 }
 
@@ -100,6 +103,7 @@ input UserUpdateInput {
   email: String
   password: String
   basketId: String
+  favoritesId: String
   createdAt: DateTime
 }
 
@@ -113,6 +117,7 @@ input UserCreateInput {
   email: String
   password: String
   basketId: String
+  favoritesId: String
   createdAt: DateTime
 }
 
@@ -126,6 +131,7 @@ type Good {
   images(where: ImageWhereInput! = {}, orderBy: [ImageOrderByInput!]! = [], take: Int, skip: Int! = 0): [Image!]
   imagesCount(where: ImageWhereInput! = {}): Int
   isInBasket: Boolean
+  isInFavorite: Boolean
   createdAt: DateTime
 }
 
@@ -406,6 +412,45 @@ input BasketRelateToOneForCreateInput {
   connect: BasketWhereUniqueInput
 }
 
+type Favorite {
+  id: ID!
+  goods(where: GoodWhereInput! = {}, orderBy: [GoodOrderByInput!]! = [], take: Int, skip: Int! = 0): [Good!]
+  goodsCount(where: GoodWhereInput! = {}): Int
+  user: User
+}
+
+input FavoriteWhereUniqueInput {
+  id: ID
+}
+
+input FavoriteWhereInput {
+  AND: [FavoriteWhereInput!]
+  OR: [FavoriteWhereInput!]
+  NOT: [FavoriteWhereInput!]
+  id: IDFilter
+  goods: GoodManyRelationFilter
+  user: UserWhereInput
+}
+
+input FavoriteOrderByInput {
+  id: OrderDirection
+}
+
+input FavoriteUpdateInput {
+  goods: GoodRelateToManyForUpdateInput
+  user: UserRelateToOneForUpdateInput
+}
+
+input FavoriteUpdateArgs {
+  where: FavoriteWhereUniqueInput!
+  data: FavoriteUpdateInput!
+}
+
+input FavoriteCreateInput {
+  goods: GoodRelateToManyForCreateInput
+  user: UserRelateToOneForCreateInput
+}
+
 type Image {
   id: ID!
   image: ImageFieldOutput
@@ -498,6 +543,12 @@ type Mutation {
   updateRequests(data: [RequestUpdateArgs!]!): [Request]
   deleteRequest(where: RequestWhereUniqueInput!): Request
   deleteRequests(where: [RequestWhereUniqueInput!]!): [Request]
+  createFavorite(data: FavoriteCreateInput!): Favorite
+  createFavorites(data: [FavoriteCreateInput!]!): [Favorite]
+  updateFavorite(where: FavoriteWhereUniqueInput!, data: FavoriteUpdateInput!): Favorite
+  updateFavorites(data: [FavoriteUpdateArgs!]!): [Favorite]
+  deleteFavorite(where: FavoriteWhereUniqueInput!): Favorite
+  deleteFavorites(where: [FavoriteWhereUniqueInput!]!): [Favorite]
   createImage(data: ImageCreateInput!): Image
   createImages(data: [ImageCreateInput!]!): [Image]
   updateImage(where: ImageWhereUniqueInput!, data: ImageUpdateInput!): Image
@@ -506,6 +557,7 @@ type Mutation {
   deleteImages(where: [ImageWhereUniqueInput!]!): [Image]
   endSession: Boolean!
   authenticateUserWithPassword(email: String!, password: String!): UserAuthenticationWithPasswordResult
+  registration(name: String!, email: String!, password: String!): UserAuthenticationWithPasswordResult
 }
 
 union UserAuthenticationWithPasswordResult = UserAuthenticationWithPasswordSuccess | UserAuthenticationWithPasswordFailure
@@ -535,6 +587,9 @@ type Query {
   requests(where: RequestWhereInput! = {}, orderBy: [RequestOrderByInput!]! = [], take: Int, skip: Int! = 0): [Request!]
   request(where: RequestWhereUniqueInput!): Request
   requestsCount(where: RequestWhereInput! = {}): Int
+  favorites(where: FavoriteWhereInput! = {}, orderBy: [FavoriteOrderByInput!]! = [], take: Int, skip: Int! = 0): [Favorite!]
+  favorite(where: FavoriteWhereUniqueInput!): Favorite
+  favoritesCount(where: FavoriteWhereInput! = {}): Int
   images(where: ImageWhereInput! = {}, orderBy: [ImageOrderByInput!]! = [], take: Int, skip: Int! = 0): [Image!]
   image(where: ImageWhereUniqueInput!): Image
   imagesCount(where: ImageWhereInput! = {}): Int

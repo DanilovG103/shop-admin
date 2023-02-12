@@ -13,26 +13,29 @@ generator client {
 }
 
 model User {
-  id               String    @id @default(cuid())
-  name             String    @default("")
-  email            String    @unique @default("")
-  password         String
-  basketId         String    @default("")
-  createdAt        DateTime? @default(now())
-  from_Basket_user Basket[]  @relation("Basket_user")
+  id                 String     @id @default(cuid())
+  name               String     @default("")
+  email              String     @unique @default("")
+  password           String
+  basketId           String     @default("")
+  favoritesId        String     @default("")
+  createdAt          DateTime?  @default(now())
+  from_Basket_user   Basket[]   @relation("Basket_user")
+  from_Favorite_user Favorite[] @relation("Favorite_user")
 }
 
 model Good {
-  id                String    @id @default(cuid())
-  title             String    @default("")
-  description       String    @default("")
-  brand             Brand?    @relation("Good_brand", fields: [brandId], references: [id])
-  brandId           String?   @map("brand")
-  category          String?
-  price             Int
-  images            Image[]   @relation("Good_images")
-  createdAt         DateTime? @default(now())
-  from_Basket_goods Basket[]  @relation("Basket_goods")
+  id                  String     @id @default(cuid())
+  title               String     @default("")
+  description         String     @default("")
+  brand               Brand?     @relation("Good_brand", fields: [brandId], references: [id])
+  brandId             String?    @map("brand")
+  category            String?
+  price               Int
+  images              Image[]    @relation("Good_images")
+  createdAt           DateTime?  @default(now())
+  from_Basket_goods   Basket[]   @relation("Basket_goods")
+  from_Favorite_goods Favorite[] @relation("Favorite_goods")
 
   @@index([brandId])
 }
@@ -61,6 +64,15 @@ model Request {
   rejectReason String  @default("")
 
   @@index([dataId])
+}
+
+model Favorite {
+  id     String  @id @default(cuid())
+  goods  Good[]  @relation("Favorite_goods")
+  user   User?   @relation("Favorite_user", fields: [userId], references: [id])
+  userId String? @map("user")
+
+  @@index([userId])
 }
 
 model Image {
