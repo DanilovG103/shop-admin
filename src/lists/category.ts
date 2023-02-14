@@ -3,7 +3,7 @@ import { text } from '@keystone-6/core/fields'
 
 import { adminOperations } from '../utils'
 
-export const brandList = list({
+export const categoryList = list({
   access: {
     operation: {
       ...adminOperations,

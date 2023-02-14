@@ -1,16 +1,20 @@
 import { list } from '@keystone-6/core'
-import { allowAll } from '@keystone-6/core/access'
+import { allOperations, allowAll } from '@keystone-6/core/access'
 import { relationship, select, text } from '@keystone-6/core/fields'
 
-import { RequestStatus } from '../enums/status'
+import { RequestStatus } from '../enums'
+import { isAdmin } from '../utils'
 
 export const requestsList = list({
-  access: allowAll,
+  access: {
+    operation: {
+      ...allOperations(allowAll),
+      delete: isAdmin,
+    },
+    // TODO: ADD FILTER FOR USER
+  },
   fields: {
-    data: relationship({
-      ref: 'Basket',
-      many: false,
-    }),
+    goods: relationship({ ref: 'Good', many: true }),
     status: select({
       options: [
         { label: 'Ожидание', value: RequestStatus.PENDING },

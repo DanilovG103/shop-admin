@@ -8,11 +8,17 @@ type User {
   password: PasswordState
   basketId: String
   favoritesId: String
+  role: UserRoleType
   createdAt: DateTime
 }
 
 type PasswordState {
   isSet: Boolean!
+}
+
+enum UserRoleType {
+  ADMIN
+  USER
 }
 
 scalar DateTime @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc3339#section-5.6")
@@ -31,6 +37,7 @@ input UserWhereInput {
   email: StringFilter
   basketId: StringFilter
   favoritesId: StringFilter
+  role: UserRoleTypeNullableFilter
   createdAt: DateTimeNullableFilter
 }
 
@@ -73,6 +80,13 @@ input NestedStringFilter {
   not: NestedStringFilter
 }
 
+input UserRoleTypeNullableFilter {
+  equals: UserRoleType
+  in: [UserRoleType!]
+  notIn: [UserRoleType!]
+  not: UserRoleTypeNullableFilter
+}
+
 input DateTimeNullableFilter {
   equals: DateTime
   in: [DateTime!]
@@ -90,6 +104,7 @@ input UserOrderByInput {
   email: OrderDirection
   basketId: OrderDirection
   favoritesId: OrderDirection
+  role: OrderDirection
   createdAt: OrderDirection
 }
 
@@ -104,6 +119,7 @@ input UserUpdateInput {
   password: String
   basketId: String
   favoritesId: String
+  role: UserRoleType
   createdAt: DateTime
 }
 
@@ -118,6 +134,7 @@ input UserCreateInput {
   password: String
   basketId: String
   favoritesId: String
+  role: UserRoleType
   createdAt: DateTime
 }
 
@@ -126,7 +143,9 @@ type Good {
   title: String
   description: String
   brand: Brand
-  category: GoodCategoryType
+  audienceCategory: GoodAudienceCategoryType
+  category: Category
+  count: Int
   price: Int
   images(where: ImageWhereInput! = {}, orderBy: [ImageOrderByInput!]! = [], take: Int, skip: Int! = 0): [Image!]
   imagesCount(where: ImageWhereInput! = {}): Int
@@ -135,7 +154,7 @@ type Good {
   createdAt: DateTime
 }
 
-enum GoodCategoryType {
+enum GoodAudienceCategoryType {
   MALE
   FEMALE
   KIDS
@@ -153,17 +172,19 @@ input GoodWhereInput {
   title: StringFilter
   description: StringFilter
   brand: BrandWhereInput
-  category: GoodCategoryTypeNullableFilter
+  audienceCategory: GoodAudienceCategoryTypeNullableFilter
+  category: CategoryWhereInput
+  count: IntFilter
   price: IntFilter
   images: ImageManyRelationFilter
   createdAt: DateTimeNullableFilter
 }
 
-input GoodCategoryTypeNullableFilter {
-  equals: GoodCategoryType
-  in: [GoodCategoryType!]
-  notIn: [GoodCategoryType!]
-  not: GoodCategoryTypeNullableFilter
+input GoodAudienceCategoryTypeNullableFilter {
+  equals: GoodAudienceCategoryType
+  in: [GoodAudienceCategoryType!]
+  notIn: [GoodAudienceCategoryType!]
+  not: GoodAudienceCategoryTypeNullableFilter
 }
 
 input IntFilter {
@@ -187,7 +208,8 @@ input GoodOrderByInput {
   id: OrderDirection
   title: OrderDirection
   description: OrderDirection
-  category: OrderDirection
+  audienceCategory: OrderDirection
+  count: OrderDirection
   price: OrderDirection
   createdAt: OrderDirection
 }
@@ -196,7 +218,9 @@ input GoodUpdateInput {
   title: String
   description: String
   brand: BrandRelateToOneForUpdateInput
-  category: GoodCategoryType
+  audienceCategory: GoodAudienceCategoryType
+  category: CategoryRelateToOneForUpdateInput
+  count: Int
   price: Int
   images: ImageRelateToManyForUpdateInput
   createdAt: DateTime
@@ -205,6 +229,12 @@ input GoodUpdateInput {
 input BrandRelateToOneForUpdateInput {
   create: BrandCreateInput
   connect: BrandWhereUniqueInput
+  disconnect: Boolean
+}
+
+input CategoryRelateToOneForUpdateInput {
+  create: CategoryCreateInput
+  connect: CategoryWhereUniqueInput
   disconnect: Boolean
 }
 
@@ -224,7 +254,9 @@ input GoodCreateInput {
   title: String
   description: String
   brand: BrandRelateToOneForCreateInput
-  category: GoodCategoryType
+  audienceCategory: GoodAudienceCategoryType
+  category: CategoryRelateToOneForCreateInput
+  count: Int
   price: Int
   images: ImageRelateToManyForCreateInput
   createdAt: DateTime
@@ -233,6 +265,11 @@ input GoodCreateInput {
 input BrandRelateToOneForCreateInput {
   create: BrandCreateInput
   connect: BrandWhereUniqueInput
+}
+
+input CategoryRelateToOneForCreateInput {
+  create: CategoryCreateInput
+  connect: CategoryWhereUniqueInput
 }
 
 input ImageRelateToManyForCreateInput {
@@ -346,7 +383,8 @@ input BrandCreateInput {
 
 type Request {
   id: ID!
-  data: Basket
+  goods(where: GoodWhereInput! = {}, orderBy: [GoodOrderByInput!]! = [], take: Int, skip: Int! = 0): [Good!]
+  goodsCount(where: GoodWhereInput! = {}): Int
   status: RequestStatusType
   rejectReason: String
 }
@@ -366,7 +404,7 @@ input RequestWhereInput {
   OR: [RequestWhereInput!]
   NOT: [RequestWhereInput!]
   id: IDFilter
-  data: BasketWhereInput
+  goods: GoodManyRelationFilter
   status: RequestStatusTypeNullableFilter
   rejectReason: StringFilter
 }
@@ -385,15 +423,9 @@ input RequestOrderByInput {
 }
 
 input RequestUpdateInput {
-  data: BasketRelateToOneForUpdateInput
+  goods: GoodRelateToManyForUpdateInput
   status: RequestStatusType
   rejectReason: String
-}
-
-input BasketRelateToOneForUpdateInput {
-  create: BasketCreateInput
-  connect: BasketWhereUniqueInput
-  disconnect: Boolean
 }
 
 input RequestUpdateArgs {
@@ -402,14 +434,9 @@ input RequestUpdateArgs {
 }
 
 input RequestCreateInput {
-  data: BasketRelateToOneForCreateInput
+  goods: GoodRelateToManyForCreateInput
   status: RequestStatusType
   rejectReason: String
-}
-
-input BasketRelateToOneForCreateInput {
-  create: BasketCreateInput
-  connect: BasketWhereUniqueInput
 }
 
 type Favorite {
@@ -449,6 +476,41 @@ input FavoriteUpdateArgs {
 input FavoriteCreateInput {
   goods: GoodRelateToManyForCreateInput
   user: UserRelateToOneForCreateInput
+}
+
+type Category {
+  id: ID!
+  title: String
+}
+
+input CategoryWhereUniqueInput {
+  id: ID
+}
+
+input CategoryWhereInput {
+  AND: [CategoryWhereInput!]
+  OR: [CategoryWhereInput!]
+  NOT: [CategoryWhereInput!]
+  id: IDFilter
+  title: StringFilter
+}
+
+input CategoryOrderByInput {
+  id: OrderDirection
+  title: OrderDirection
+}
+
+input CategoryUpdateInput {
+  title: String
+}
+
+input CategoryUpdateArgs {
+  where: CategoryWhereUniqueInput!
+  data: CategoryUpdateInput!
+}
+
+input CategoryCreateInput {
+  title: String
 }
 
 type Image {
@@ -549,6 +611,12 @@ type Mutation {
   updateFavorites(data: [FavoriteUpdateArgs!]!): [Favorite]
   deleteFavorite(where: FavoriteWhereUniqueInput!): Favorite
   deleteFavorites(where: [FavoriteWhereUniqueInput!]!): [Favorite]
+  createCategory(data: CategoryCreateInput!): Category
+  createCategories(data: [CategoryCreateInput!]!): [Category]
+  updateCategory(where: CategoryWhereUniqueInput!, data: CategoryUpdateInput!): Category
+  updateCategories(data: [CategoryUpdateArgs!]!): [Category]
+  deleteCategory(where: CategoryWhereUniqueInput!): Category
+  deleteCategories(where: [CategoryWhereUniqueInput!]!): [Category]
   createImage(data: ImageCreateInput!): Image
   createImages(data: [ImageCreateInput!]!): [Image]
   updateImage(where: ImageWhereUniqueInput!, data: ImageUpdateInput!): Image
@@ -558,6 +626,8 @@ type Mutation {
   endSession: Boolean!
   authenticateUserWithPassword(email: String!, password: String!): UserAuthenticationWithPasswordResult
   registration(name: String!, email: String!, password: String!): UserAuthenticationWithPasswordResult
+  updateMyFavorite(id: ID!): Good
+  updateMyBasket(id: ID!): Good
 }
 
 union UserAuthenticationWithPasswordResult = UserAuthenticationWithPasswordSuccess | UserAuthenticationWithPasswordFailure
@@ -590,6 +660,9 @@ type Query {
   favorites(where: FavoriteWhereInput! = {}, orderBy: [FavoriteOrderByInput!]! = [], take: Int, skip: Int! = 0): [Favorite!]
   favorite(where: FavoriteWhereUniqueInput!): Favorite
   favoritesCount(where: FavoriteWhereInput! = {}): Int
+  categories(where: CategoryWhereInput! = {}, orderBy: [CategoryOrderByInput!]! = [], take: Int, skip: Int! = 0): [Category!]
+  category(where: CategoryWhereUniqueInput!): Category
+  categoriesCount(where: CategoryWhereInput! = {}): Int
   images(where: ImageWhereInput! = {}, orderBy: [ImageOrderByInput!]! = [], take: Int, skip: Int! = 0): [Image!]
   image(where: ImageWhereUniqueInput!): Image
   imagesCount(where: ImageWhereInput! = {}): Int

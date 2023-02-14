@@ -5,6 +5,7 @@ import { image } from '@keystone-6/core/fields'
 import {
   basketList,
   brandList,
+  categoryList,
   favoritesList,
   goodList,
   requestsList,
@@ -19,6 +20,7 @@ export const lists: Lists = {
   Brand: brandList,
   Request: requestsList,
   Favorite: favoritesList,
+  Category: categoryList,
   Image: list({
     access: allowAll,
     fields: {

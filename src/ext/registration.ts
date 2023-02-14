@@ -1,6 +1,8 @@
 import { graphql } from '@keystone-6/core'
 import type { Context } from '@keystone-6/core/dist/declarations/src/types/schema/graphql-ts-schema'
 
+import { Role } from './../enums'
+
 interface Result {
   authenticateUserWithPassword: Record<string, unknown>
 }
@@ -24,11 +26,12 @@ export const registration = (base: graphql.BaseSchemaMeta) => {
         throw new Error('Пользователь с таким email уже есть')
       }
 
-      await ctx.query.User.createOne({
+      await ctx.db.User.createOne({
         data: {
           email,
           password,
           name,
+          role: Role.USER,
         },
       })
 

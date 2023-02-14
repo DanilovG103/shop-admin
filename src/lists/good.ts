@@ -1,5 +1,4 @@
 import { graphql, list } from '@keystone-6/core'
-import { allowAll } from '@keystone-6/core/access'
 import {
   integer,
   relationship,
@@ -9,15 +8,20 @@ import {
   virtual,
 } from '@keystone-6/core/fields'
 
-import { Category } from '../enums/category'
-import { getUserFromSession } from '../utils'
+import { AudienceCategory } from '../enums'
+import { adminOperations, getUserFromSession } from '../utils'
 
 interface Item {
   id: string
 }
 
 export const goodList = list({
-  access: allowAll,
+  access: {
+    operation: {
+      ...adminOperations,
+      query: () => true,
+    },
+  },
   fields: {
     title: text({ validation: { isRequired: true } }),
     description: text({
@@ -25,14 +29,16 @@ export const goodList = list({
       ui: { displayMode: 'textarea' },
     }),
     brand: relationship({ ref: 'Brand' }),
-    category: select({
+    audienceCategory: select({
       options: [
-        { label: 'Мужская', value: Category.MALE },
-        { label: 'Женская', value: Category.FEMALE },
-        { label: 'Детская', value: Category.KIDS },
+        { label: 'Мужская', value: AudienceCategory.MALE },
+        { label: 'Женская', value: AudienceCategory.FEMALE },
+        { label: 'Детская', value: AudienceCategory.KIDS },
       ],
       type: 'enum',
     }),
+    category: relationship({ ref: 'Category', many: false }),
+    count: integer({ validation: { isRequired: true }, defaultValue: 0 }),
     price: integer({ validation: { isRequired: true } }),
     images: relationship({
       ref: 'Image',

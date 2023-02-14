@@ -1,5 +1,7 @@
 import type { Context } from '@keystone-6/core/dist/declarations/src/types/schema/graphql-ts-schema'
 
+import type { Session } from '../types'
+
 interface User {
   id: string
   name: string

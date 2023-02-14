@@ -23,7 +23,7 @@ __export(keystone_exports, {
   default: () => keystone_default
 });
 module.exports = __toCommonJS(keystone_exports);
-var import_core11 = require("@keystone-6/core");
+var import_core12 = require("@keystone-6/core");
 
 // auth.ts
 var import_auth = require("@keystone-6/auth");
@@ -36,7 +36,7 @@ if (!sessionSecret && process.env.NODE_ENV !== "production") {
 var { withAuth } = (0, import_auth.createAuth)({
   listKey: "User",
   identityField: "email",
-  sessionData: "name createdAt",
+  sessionData: "name createdAt role",
   secretField: "password"
 });
 var sessionMaxAge = 60 * 60 * 24 * 30;
@@ -46,21 +46,70 @@ var session = (0, import_session.statelessSessions)({
 });
 
 // schema.ts
-var import_core7 = require("@keystone-6/core");
-var import_access7 = require("@keystone-6/core/access");
-var import_fields8 = require("@keystone-6/core/fields");
+var import_core8 = require("@keystone-6/core");
+var import_access5 = require("@keystone-6/core/access");
+var import_fields9 = require("@keystone-6/core/fields");
 
 // src/lists/basket.ts
 var import_schema = require("@graphql-ts/schema");
 var import_core = require("@keystone-6/core");
 var import_access = require("@keystone-6/core/access");
+var import_fields2 = require("@keystone-6/core/fields");
+
+// src/utils/get-user.ts
+var getUserFromSession = async (ctx, query, noUserValue) => {
+  const ses = ctx.session;
+  if (!ses) {
+    return noUserValue;
+  }
+  const user = await ctx.query.User.findOne({
+    where: {
+      id: ses.itemId
+    },
+    query
+  });
+  return user;
+};
+
+// src/utils/hidden.ts
 var import_fields = require("@keystone-6/core/fields");
+var hiddenText = (0, import_fields.text)({
+  ui: {
+    createView: {
+      fieldMode: "hidden"
+    },
+    itemView: {
+      fieldMode: "read"
+    }
+  }
+});
+
+// src/utils/is-admin.ts
+var isAdmin = ({ session: session2 }) => {
+  if (!session2)
+    return false;
+  return session2.data.role === "ADMIN" /* ADMIN */;
+};
+
+// src/utils/admin-operations.ts
+var adminOperations = {
+  create: isAdmin,
+  update: isAdmin,
+  delete: isAdmin
+};
+
+// src/lists/basket.ts
 var basketList = (0, import_core.list)({
-  access: import_access.allowAll,
+  access: {
+    operation: {
+      ...(0, import_access.allOperations)(import_access.allowAll),
+      delete: isAdmin
+    }
+  },
   fields: {
-    goods: (0, import_fields.relationship)({ ref: "Good", many: true }),
-    user: (0, import_fields.relationship)({ ref: "User", many: false }),
-    sum: (0, import_fields.virtual)({
+    goods: (0, import_fields2.relationship)({ ref: "Good", many: true }),
+    user: (0, import_fields2.relationship)({ ref: "User", many: false }),
+    sum: (0, import_fields2.virtual)({
       field: import_schema.graphql.field({
         type: import_schema.graphql.Int,
         async resolve(item, args, ctx) {
@@ -84,40 +133,14 @@ var basketList = (0, import_core.list)({
 
 // src/lists/good.ts
 var import_core2 = require("@keystone-6/core");
-var import_access2 = require("@keystone-6/core/access");
 var import_fields3 = require("@keystone-6/core/fields");
-
-// src/utils/get-user.ts
-var getUserFromSession = async (ctx, query, noUserValue) => {
-  const ses = ctx.session;
-  if (!ses) {
-    return noUserValue;
-  }
-  const user = await ctx.query.User.findOne({
-    where: {
-      id: ses.itemId
-    },
-    query
-  });
-  return user;
-};
-
-// src/utils/hidden.ts
-var import_fields2 = require("@keystone-6/core/fields");
-var hiddenText = (0, import_fields2.text)({
-  ui: {
-    createView: {
-      fieldMode: "hidden"
-    },
-    itemView: {
-      fieldMode: "read"
-    }
-  }
-});
-
-// src/lists/good.ts
 var goodList = (0, import_core2.list)({
-  access: import_access2.allowAll,
+  access: {
+    operation: {
+      ...adminOperations,
+      query: () => true
+    }
+  },
   fields: {
     title: (0, import_fields3.text)({ validation: { isRequired: true } }),
     description: (0, import_fields3.text)({
@@ -125,7 +148,7 @@ var goodList = (0, import_core2.list)({
       ui: { displayMode: "textarea" }
     }),
     brand: (0, import_fields3.relationship)({ ref: "Brand" }),
-    category: (0, import_fields3.select)({
+    audienceCategory: (0, import_fields3.select)({
       options: [
         { label: "\u041C\u0443\u0436\u0441\u043A\u0430\u044F", value: "MALE" /* MALE */ },
         { label: "\u0416\u0435\u043D\u0441\u043A\u0430\u044F", value: "FEMALE" /* FEMALE */ },
@@ -133,6 +156,8 @@ var goodList = (0, import_core2.list)({
       ],
       type: "enum"
     }),
+    category: (0, import_fields3.relationship)({ ref: "Category", many: false }),
+    count: (0, import_fields3.integer)({ validation: { isRequired: true }, defaultValue: 0 }),
     price: (0, import_fields3.integer)({ validation: { isRequired: true } }),
     images: (0, import_fields3.relationship)({
       ref: "Image",
@@ -188,14 +213,14 @@ var goodList = (0, import_core2.list)({
 
 // src/lists/user.ts
 var import_core3 = require("@keystone-6/core");
-var import_access3 = require("@keystone-6/core/access");
+var import_access2 = require("@keystone-6/core/access");
 var import_fields4 = require("@keystone-6/core/fields");
 var afterCreateInput = (item) => ({
   goods: { create: [] },
   user: { connect: { id: item.id } }
 });
 var userList = (0, import_core3.list)({
-  access: import_access3.allowAll,
+  access: import_access2.allowAll,
   fields: {
     name: (0, import_fields4.text)({ validation: { isRequired: true } }),
     email: (0, import_fields4.text)({
@@ -205,6 +230,18 @@ var userList = (0, import_core3.list)({
     password: (0, import_fields4.password)({ validation: { isRequired: true } }),
     basketId: hiddenText,
     favoritesId: hiddenText,
+    role: (0, import_fields4.select)({
+      options: [
+        { label: "\u0410\u0434\u043C\u0438\u043D", value: "ADMIN" /* ADMIN */ },
+        { label: "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C", value: "USER" /* USER */ }
+      ],
+      type: "enum",
+      defaultValue: "USER" /* USER */,
+      access: {
+        read: () => true,
+        update: isAdmin
+      }
+    }),
     createdAt: (0, import_fields4.timestamp)({
       defaultValue: { kind: "now" }
     })
@@ -246,10 +283,14 @@ var userList = (0, import_core3.list)({
 
 // src/lists/brand.ts
 var import_core4 = require("@keystone-6/core");
-var import_access4 = require("@keystone-6/core/access");
 var import_fields5 = require("@keystone-6/core/fields");
 var brandList = (0, import_core4.list)({
-  access: import_access4.allowAll,
+  access: {
+    operation: {
+      ...adminOperations,
+      query: () => true
+    }
+  },
   fields: {
     title: (0, import_fields5.text)({ validation: { isRequired: true } })
   }
@@ -257,15 +298,17 @@ var brandList = (0, import_core4.list)({
 
 // src/lists/requests.ts
 var import_core5 = require("@keystone-6/core");
-var import_access5 = require("@keystone-6/core/access");
+var import_access3 = require("@keystone-6/core/access");
 var import_fields6 = require("@keystone-6/core/fields");
 var requestsList = (0, import_core5.list)({
-  access: import_access5.allowAll,
+  access: {
+    operation: {
+      ...(0, import_access3.allOperations)(import_access3.allowAll),
+      delete: isAdmin
+    }
+  },
   fields: {
-    data: (0, import_fields6.relationship)({
-      ref: "Basket",
-      many: false
-    }),
+    goods: (0, import_fields6.relationship)({ ref: "Good", many: true }),
     status: (0, import_fields6.select)({
       options: [
         { label: "\u041E\u0436\u0438\u0434\u0430\u043D\u0438\u0435", value: "PENDING" /* PENDING */ },
@@ -281,13 +324,33 @@ var requestsList = (0, import_core5.list)({
 
 // src/lists/favorites.ts
 var import_core6 = require("@keystone-6/core");
-var import_access6 = require("@keystone-6/core/access");
+var import_access4 = require("@keystone-6/core/access");
 var import_fields7 = require("@keystone-6/core/fields");
 var favoritesList = (0, import_core6.list)({
-  access: import_access6.allowAll,
+  access: {
+    operation: {
+      ...(0, import_access4.allOperations)(import_access4.allowAll),
+      delete: isAdmin
+    }
+  },
   fields: {
     goods: (0, import_fields7.relationship)({ ref: "Good", many: true }),
     user: (0, import_fields7.relationship)({ ref: "User", many: false })
+  }
+});
+
+// src/lists/category.ts
+var import_core7 = require("@keystone-6/core");
+var import_fields8 = require("@keystone-6/core/fields");
+var categoryList = (0, import_core7.list)({
+  access: {
+    operation: {
+      ...adminOperations,
+      query: () => true
+    }
+  },
+  fields: {
+    title: (0, import_fields8.text)({ validation: { isRequired: true } })
   }
 });
 
@@ -299,29 +362,24 @@ var lists = {
   Brand: brandList,
   Request: requestsList,
   Favorite: favoritesList,
-  Image: (0, import_core7.list)({
-    access: import_access7.allowAll,
+  Category: categoryList,
+  Image: (0, import_core8.list)({
+    access: import_access5.allowAll,
     fields: {
-      image: (0, import_fields8.image)({ storage: "images" })
+      image: (0, import_fields9.image)({ storage: "images" })
     }
   })
 };
 
-// src/ext/my-basket.ts
-var import_core8 = require("@keystone-6/core");
-
-// src/ext/my-favorites.ts
-var import_core9 = require("@keystone-6/core");
-
 // src/ext/registration.ts
-var import_core10 = require("@keystone-6/core");
+var import_core9 = require("@keystone-6/core");
 var registration = (base) => {
-  return import_core10.graphql.field({
+  return import_core9.graphql.field({
     type: base.union("UserAuthenticationWithPasswordResult"),
     args: {
-      name: import_core10.graphql.arg({ type: import_core10.graphql.nonNull(import_core10.graphql.String) }),
-      email: import_core10.graphql.arg({ type: import_core10.graphql.nonNull(import_core10.graphql.String) }),
-      password: import_core10.graphql.arg({ type: import_core10.graphql.nonNull(import_core10.graphql.String) })
+      name: import_core9.graphql.arg({ type: import_core9.graphql.nonNull(import_core9.graphql.String) }),
+      email: import_core9.graphql.arg({ type: import_core9.graphql.nonNull(import_core9.graphql.String) }),
+      password: import_core9.graphql.arg({ type: import_core9.graphql.nonNull(import_core9.graphql.String) })
     },
     async resolve(_, { email, password: password2, name }, ctx) {
       const user = await ctx.query.User.findOne({
@@ -332,11 +390,12 @@ var registration = (base) => {
       if (user) {
         throw new Error("\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C \u0441 \u0442\u0430\u043A\u0438\u043C email \u0443\u0436\u0435 \u0435\u0441\u0442\u044C");
       }
-      await ctx.query.User.createOne({
+      await ctx.db.User.createOne({
         data: {
           email,
           password: password2,
-          name
+          name,
+          role: "USER" /* USER */
         }
       });
       const result = await ctx.graphql.run({
@@ -368,6 +427,82 @@ var registration = (base) => {
   });
 };
 
+// src/ext/my-favorite.ts
+var import_core10 = require("@keystone-6/core");
+var updateMyFavorite = (base) => {
+  return import_core10.graphql.field({
+    type: base.object("Good"),
+    args: {
+      id: import_core10.graphql.arg({ type: import_core10.graphql.nonNull(import_core10.graphql.ID) })
+    },
+    async resolve(_, { id }, ctx) {
+      const user = await getUserFromSession(ctx, "favoritesId", null);
+      if (!user) {
+        return null;
+      }
+      const { isInFavorite } = await ctx.query.Good.findOne({
+        where: {
+          id
+        },
+        query: `isInFavorite`
+      });
+      const option = isInFavorite ? "disconnect" : "connect";
+      await ctx.query.Favorite.updateOne({
+        where: {
+          id: user.favoritesId
+        },
+        data: {
+          goods: {
+            [option]: [{ id }]
+          }
+        }
+      });
+      return {
+        id,
+        isInFavorite: !isInFavorite
+      };
+    }
+  });
+};
+
+// src/ext/my-basket.ts
+var import_core11 = require("@keystone-6/core");
+var updateMyBasket = (base) => {
+  return import_core11.graphql.field({
+    type: base.object("Good"),
+    args: {
+      id: import_core11.graphql.arg({ type: import_core11.graphql.nonNull(import_core11.graphql.ID) })
+    },
+    async resolve(_, { id }, ctx) {
+      const user = await getUserFromSession(ctx, "basketId", null);
+      if (!user) {
+        return null;
+      }
+      const { isInBasket } = await ctx.query.Good.findOne({
+        where: {
+          id
+        },
+        query: `isInBasket`
+      });
+      const option = isInBasket ? "disconnect" : "connect";
+      await ctx.query.Basket.updateOne({
+        where: {
+          id: user.basketId
+        },
+        data: {
+          goods: {
+            [option]: [{ id }]
+          }
+        }
+      });
+      return {
+        id,
+        isInBasket: !isInBasket
+      };
+    }
+  });
+};
+
 // storage.ts
 var storage = {
   images: {
@@ -392,17 +527,21 @@ var onConnect = async (ctx) => {
     data: {
       name: process.env.ADMIN_NAME,
       email: process.env.ADMIN_EMAIL,
-      password: process.env.ADMIN_PASSWORD
+      password: process.env.ADMIN_PASSWORD,
+      role: "ADMIN" /* ADMIN */
     }
   });
 };
 var keystone_default = withAuth(
-  (0, import_core11.config)({
+  (0, import_core12.config)({
     db: {
       provider: "sqlite",
       url: "file:./keystone.db",
       useMigrations: true,
       onConnect
+    },
+    ui: {
+      isAccessAllowed: isAdmin
     },
     lists,
     session,
@@ -411,10 +550,12 @@ var keystone_default = withAuth(
       port: 8e3,
       cors: true
     },
-    extendGraphqlSchema: import_core11.graphql.extend((base) => {
+    extendGraphqlSchema: import_core12.graphql.extend((base) => {
       return {
         mutation: {
-          registration: registration(base)
+          registration: registration(base),
+          updateMyFavorite: updateMyFavorite(base),
+          updateMyBasket: updateMyBasket(base)
         }
       };
     })

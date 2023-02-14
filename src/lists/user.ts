@@ -1,9 +1,10 @@
 import { list } from '@keystone-6/core'
 import { allowAll } from '@keystone-6/core/access'
-import { password, text, timestamp } from '@keystone-6/core/fields'
+import { password, select, text, timestamp } from '@keystone-6/core/fields'
 import type { BaseItem } from '@keystone-6/core/types'
 
-import { hiddenText } from '../utils'
+import { Role } from '../enums/roles'
+import { hiddenText, isAdmin } from '../utils'
 
 const afterCreateInput = (item: BaseItem) => ({
   goods: { create: [] },
@@ -26,6 +27,18 @@ export const userList = list({
     password: password({ validation: { isRequired: true } }),
     basketId: hiddenText,
     favoritesId: hiddenText,
+    role: select({
+      options: [
+        { label: 'Админ', value: Role.ADMIN },
+        { label: 'Пользователь', value: Role.USER },
+      ],
+      type: 'enum',
+      defaultValue: Role.USER,
+      access: {
+        read: () => true,
+        update: isAdmin,
+      },
+    }),
     createdAt: timestamp({
       defaultValue: { kind: 'now' },
     }),

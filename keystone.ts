@@ -3,7 +3,9 @@ import type { Context } from '@keystone-6/core/dist/declarations/src/types/schem
 
 import { session, withAuth } from './auth'
 import { lists } from './schema'
-import { registration } from './src/ext'
+import { Role } from './src/enums'
+import { registration, updateMyBasket, updateMyFavorite } from './src/ext'
+import { isAdmin } from './src/utils'
 import { storage } from './storage'
 
 const onConnect = async (ctx: Context) => {
@@ -18,6 +20,7 @@ const onConnect = async (ctx: Context) => {
       name: process.env.ADMIN_NAME,
       email: process.env.ADMIN_EMAIL,
       password: process.env.ADMIN_PASSWORD,
+      role: Role.ADMIN,
     },
   })
 }
@@ -29,6 +32,10 @@ export default withAuth(
       url: 'file:./keystone.db',
       useMigrations: true,
       onConnect,
+      // enableLogging: true,
+    },
+    ui: {
+      isAccessAllowed: isAdmin,
     },
     lists,
     session,
@@ -41,6 +48,8 @@ export default withAuth(
       return {
         mutation: {
           registration: registration(base),
+          updateMyFavorite: updateMyFavorite(base),
+          updateMyBasket: updateMyBasket(base),
         },
       }
     }),
