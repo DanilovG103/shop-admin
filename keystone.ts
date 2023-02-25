@@ -32,7 +32,7 @@ export default withAuth(
       url: 'file:./keystone.db',
       useMigrations: true,
       onConnect,
-      // enableLogging: true,
+      enableLogging: true,
     },
     ui: {
       isAccessAllowed: isAdmin,

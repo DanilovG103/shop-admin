@@ -1,6 +1,6 @@
 import { list } from '@keystone-6/core'
 import { allOperations, allowAll } from '@keystone-6/core/access'
-import { relationship, select, text } from '@keystone-6/core/fields'
+import { relationship, select, text, timestamp } from '@keystone-6/core/fields'
 
 import { RequestStatus } from '../enums'
 import { isAdmin } from '../utils'
@@ -11,7 +11,6 @@ export const requestsList = list({
       ...allOperations(allowAll),
       delete: isAdmin,
     },
-    // TODO: ADD FILTER FOR USER
   },
   fields: {
     goods: relationship({ ref: 'Good', many: true }),
@@ -24,6 +23,31 @@ export const requestsList = list({
       type: 'enum',
       defaultValue: RequestStatus.PENDING,
     }),
+    user: relationship({ ref: 'User', many: false }),
     rejectReason: text(),
+    createdAt: timestamp({ defaultValue: { kind: 'now' } }),
+  },
+  hooks: {
+    async afterOperation({ operation, context, inputData }) {
+      if (operation === 'create') {
+        const user = await context.query.User.findOne({
+          where: {
+            id: inputData.user.connect.id,
+          },
+          query: `basketId`,
+        })
+
+        await context.query.Basket.updateOne({
+          where: {
+            id: user.basketId,
+          },
+          data: {
+            goods: {
+              disconnect: inputData.goods.connect,
+            },
+          },
+        })
+      }
+    },
   },
 })

@@ -145,7 +145,7 @@ type Good {
   brand: Brand
   audienceCategory: GoodAudienceCategoryType
   category: Category
-  count: Int
+  sizes: [String!]
   price: Int
   images(where: ImageWhereInput! = {}, orderBy: [ImageOrderByInput!]! = [], take: Int, skip: Int! = 0): [Image!]
   imagesCount(where: ImageWhereInput! = {}): Int
@@ -174,7 +174,6 @@ input GoodWhereInput {
   brand: BrandWhereInput
   audienceCategory: GoodAudienceCategoryTypeNullableFilter
   category: CategoryWhereInput
-  count: IntFilter
   price: IntFilter
   images: ImageManyRelationFilter
   createdAt: DateTimeNullableFilter
@@ -209,7 +208,6 @@ input GoodOrderByInput {
   title: OrderDirection
   description: OrderDirection
   audienceCategory: OrderDirection
-  count: OrderDirection
   price: OrderDirection
   createdAt: OrderDirection
 }
@@ -220,7 +218,7 @@ input GoodUpdateInput {
   brand: BrandRelateToOneForUpdateInput
   audienceCategory: GoodAudienceCategoryType
   category: CategoryRelateToOneForUpdateInput
-  count: Int
+  sizes: [String!]
   price: Int
   images: ImageRelateToManyForUpdateInput
   createdAt: DateTime
@@ -256,7 +254,7 @@ input GoodCreateInput {
   brand: BrandRelateToOneForCreateInput
   audienceCategory: GoodAudienceCategoryType
   category: CategoryRelateToOneForCreateInput
-  count: Int
+  sizes: [String!]
   price: Int
   images: ImageRelateToManyForCreateInput
   createdAt: DateTime
@@ -386,7 +384,9 @@ type Request {
   goods(where: GoodWhereInput! = {}, orderBy: [GoodOrderByInput!]! = [], take: Int, skip: Int! = 0): [Good!]
   goodsCount(where: GoodWhereInput! = {}): Int
   status: RequestStatusType
+  user: User
   rejectReason: String
+  createdAt: DateTime
 }
 
 enum RequestStatusType {
@@ -406,7 +406,9 @@ input RequestWhereInput {
   id: IDFilter
   goods: GoodManyRelationFilter
   status: RequestStatusTypeNullableFilter
+  user: UserWhereInput
   rejectReason: StringFilter
+  createdAt: DateTimeNullableFilter
 }
 
 input RequestStatusTypeNullableFilter {
@@ -420,12 +422,15 @@ input RequestOrderByInput {
   id: OrderDirection
   status: OrderDirection
   rejectReason: OrderDirection
+  createdAt: OrderDirection
 }
 
 input RequestUpdateInput {
   goods: GoodRelateToManyForUpdateInput
   status: RequestStatusType
+  user: UserRelateToOneForUpdateInput
   rejectReason: String
+  createdAt: DateTime
 }
 
 input RequestUpdateArgs {
@@ -436,7 +441,9 @@ input RequestUpdateArgs {
 input RequestCreateInput {
   goods: GoodRelateToManyForCreateInput
   status: RequestStatusType
+  user: UserRelateToOneForCreateInput
   rejectReason: String
+  createdAt: DateTime
 }
 
 type Favorite {

@@ -134,6 +134,19 @@ var basketList = (0, import_core.list)({
 // src/lists/good.ts
 var import_core2 = require("@keystone-6/core");
 var import_fields3 = require("@keystone-6/core/fields");
+var resolveVirtualFields = async (ctx, item, field, whereId) => {
+  const data = await ctx.query[field].findOne({
+    where: {
+      id: whereId
+    },
+    query: "goods { id }"
+  });
+  if (data === null) {
+    return false;
+  }
+  const ids = data.goods.map((good) => good.id);
+  return ids.includes(item.id);
+};
 var goodList = (0, import_core2.list)({
   access: {
     operation: {
@@ -157,7 +170,13 @@ var goodList = (0, import_core2.list)({
       type: "enum"
     }),
     category: (0, import_fields3.relationship)({ ref: "Category", many: false }),
-    count: (0, import_fields3.integer)({ validation: { isRequired: true }, defaultValue: 0 }),
+    sizes: (0, import_fields3.multiselect)({
+      options: [
+        { value: "XS", label: "XS" },
+        { value: "S", label: "S" },
+        { value: "M", label: "M" }
+      ]
+    }),
     price: (0, import_fields3.integer)({ validation: { isRequired: true } }),
     images: (0, import_fields3.relationship)({
       ref: "Image",
@@ -171,17 +190,7 @@ var goodList = (0, import_core2.list)({
           if (!user) {
             return false;
           }
-          const basket = await ctx.query.Basket.findOne({
-            where: {
-              id: user.basketId
-            },
-            query: "goods { id }"
-          });
-          if (basket === null) {
-            return false;
-          }
-          const ids = basket.goods.map((good) => good.id);
-          return ids.includes(item.id);
+          return await resolveVirtualFields(ctx, item, "Basket", user.basketId);
         }
       })
     }),
@@ -193,17 +202,12 @@ var goodList = (0, import_core2.list)({
           if (!user) {
             return false;
           }
-          const favorites = await ctx.query.Favorite.findOne({
-            where: {
-              id: user.favoritesId
-            },
-            query: "goods { id }"
-          });
-          if (favorites === null) {
-            return false;
-          }
-          const ids = favorites.goods.map((good) => good.id);
-          return ids.includes(item.id);
+          return await resolveVirtualFields(
+            ctx,
+            item,
+            "Favorite",
+            user.favoritesId
+          );
         }
       })
     }),
@@ -318,7 +322,31 @@ var requestsList = (0, import_core5.list)({
       type: "enum",
       defaultValue: "PENDING" /* PENDING */
     }),
-    rejectReason: (0, import_fields6.text)()
+    user: (0, import_fields6.relationship)({ ref: "User", many: false }),
+    rejectReason: (0, import_fields6.text)(),
+    createdAt: (0, import_fields6.timestamp)({ defaultValue: { kind: "now" } })
+  },
+  hooks: {
+    async afterOperation({ operation, context, inputData }) {
+      if (operation === "create") {
+        const user = await context.query.User.findOne({
+          where: {
+            id: inputData.user.connect.id
+          },
+          query: `basketId`
+        });
+        await context.query.Basket.updateOne({
+          where: {
+            id: user.basketId
+          },
+          data: {
+            goods: {
+              disconnect: inputData.goods.connect
+            }
+          }
+        });
+      }
+    }
   }
 });
 
@@ -538,7 +566,8 @@ var keystone_default = withAuth(
       provider: "sqlite",
       url: "file:./keystone.db",
       useMigrations: true,
-      onConnect
+      onConnect,
+      enableLogging: true
     },
     ui: {
       isAccessAllowed: isAdmin

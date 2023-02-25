@@ -1,18 +1,38 @@
 import { graphql, list } from '@keystone-6/core'
 import {
   integer,
+  multiselect,
   relationship,
   select,
   text,
   timestamp,
   virtual,
 } from '@keystone-6/core/fields'
+import type { BaseItem, KeystoneContext } from '@keystone-6/core/types'
 
 import { AudienceCategory } from '../enums'
 import { adminOperations, getUserFromSession } from '../utils'
 
-interface Item {
-  id: string
+const resolveVirtualFields = async (
+  ctx: KeystoneContext,
+  item: BaseItem,
+  field: string,
+  whereId: string,
+): Promise<boolean> => {
+  const data = await ctx.query[field].findOne({
+    where: {
+      id: whereId,
+    },
+    query: 'goods { id }',
+  })
+
+  if (data === null) {
+    return false
+  }
+
+  const ids = data.goods.map((good: BaseItem) => good.id)
+
+  return ids.includes(item.id)
 }
 
 export const goodList = list({
@@ -38,7 +58,13 @@ export const goodList = list({
       type: 'enum',
     }),
     category: relationship({ ref: 'Category', many: false }),
-    count: integer({ validation: { isRequired: true }, defaultValue: 0 }),
+    sizes: multiselect({
+      options: [
+        { value: 'XS', label: 'XS' },
+        { value: 'S', label: 'S' },
+        { value: 'M', label: 'M' },
+      ],
+    }),
     price: integer({ validation: { isRequired: true } }),
     images: relationship({
       ref: 'Image',
@@ -54,20 +80,7 @@ export const goodList = list({
             return false
           }
 
-          const basket = await ctx.query.Basket.findOne({
-            where: {
-              id: user.basketId,
-            },
-            query: 'goods { id }',
-          })
-
-          if (basket === null) {
-            return false
-          }
-
-          const ids = basket.goods.map((good: Item) => good.id)
-
-          return ids.includes((item as Item).id)
+          return await resolveVirtualFields(ctx, item, 'Basket', user.basketId)
         },
       }),
     }),
@@ -81,20 +94,12 @@ export const goodList = list({
             return false
           }
 
-          const favorites = await ctx.query.Favorite.findOne({
-            where: {
-              id: user.favoritesId,
-            },
-            query: 'goods { id }',
-          })
-
-          if (favorites === null) {
-            return false
-          }
-
-          const ids = favorites.goods.map((good: Item) => good.id)
-
-          return ids.includes((item as Item).id)
+          return await resolveVirtualFields(
+            ctx,
+            item,
+            'Favorite',
+            user.favoritesId,
+          )
         },
       }),
     }),

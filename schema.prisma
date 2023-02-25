@@ -22,6 +22,7 @@ model User {
   role               String?    @default("USER")
   createdAt          DateTime?  @default(now())
   from_Basket_user   Basket[]   @relation("Basket_user")
+  from_Request_user  Request[]  @relation("Request_user")
   from_Favorite_user Favorite[] @relation("Favorite_user")
 }
 
@@ -34,7 +35,7 @@ model Good {
   audienceCategory    String?
   category            Category?  @relation("Good_category", fields: [categoryId], references: [id])
   categoryId          String?    @map("category")
-  count               Int        @default(0)
+  sizes               String     @default("[]")
   price               Int
   images              Image[]    @relation("Good_images")
   createdAt           DateTime?  @default(now())
@@ -62,10 +63,15 @@ model Brand {
 }
 
 model Request {
-  id           String  @id @default(cuid())
-  goods        Good[]  @relation("Request_goods")
-  status       String? @default("PENDING")
-  rejectReason String  @default("")
+  id           String    @id @default(cuid())
+  goods        Good[]    @relation("Request_goods")
+  status       String?   @default("PENDING")
+  user         User?     @relation("Request_user", fields: [userId], references: [id])
+  userId       String?   @map("user")
+  rejectReason String    @default("")
+  createdAt    DateTime? @default(now())
+
+  @@index([userId])
 }
 
 model Favorite {
