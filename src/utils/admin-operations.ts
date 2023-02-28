@@ -1,3 +1,4 @@
+import type { AccessOperation } from '@keystone-6/core/dist/declarations/src/types/config/access-control'
 import type {
   BaseListTypeInfo,
   ListOperationAccessControl,
@@ -5,10 +6,14 @@ import type {
 
 import { isAdmin } from './is-admin'
 
+type Operation<T extends AccessOperation> = ListOperationAccessControl<
+  T,
+  BaseListTypeInfo
+>
 interface Operations {
-  create: ListOperationAccessControl<'create', BaseListTypeInfo>
-  update: ListOperationAccessControl<'update', BaseListTypeInfo>
-  delete: ListOperationAccessControl<'delete', BaseListTypeInfo>
+  create: Operation<'create'>
+  update: Operation<'update'>
+  delete: Operation<'delete'>
 }
 
 export const adminOperations: Operations = {

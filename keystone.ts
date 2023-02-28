@@ -4,7 +4,12 @@ import type { Context } from '@keystone-6/core/dist/declarations/src/types/schem
 import { session, withAuth } from './auth'
 import { lists } from './schema'
 import { Role } from './src/enums'
-import { registration, updateMyBasket, updateMyFavorite } from './src/ext'
+import {
+  addresses,
+  registration,
+  updateMyBasket,
+  updateMyFavorite,
+} from './src/ext'
 import { isAdmin } from './src/utils'
 import { storage } from './storage'
 
@@ -32,7 +37,7 @@ export default withAuth(
       url: 'file:./keystone.db',
       useMigrations: true,
       onConnect,
-      enableLogging: true,
+      // enableLogging: true,
     },
     ui: {
       isAccessAllowed: isAdmin,
@@ -46,6 +51,9 @@ export default withAuth(
     },
     extendGraphqlSchema: graphql.extend((base) => {
       return {
+        query: {
+          addresses,
+        },
         mutation: {
           registration: registration(base),
           updateMyFavorite: updateMyFavorite(base),

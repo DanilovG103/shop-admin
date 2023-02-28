@@ -1,8 +1,14 @@
 import { list } from '@keystone-6/core'
 import { allOperations, allowAll } from '@keystone-6/core/access'
-import { relationship, select, text, timestamp } from '@keystone-6/core/fields'
+import {
+  integer,
+  relationship,
+  select,
+  text,
+  timestamp,
+} from '@keystone-6/core/fields'
 
-import { RequestStatus } from '../enums'
+import { PaymentType, RequestStatus } from '../enums'
 import { isAdmin } from '../utils'
 
 export const requestsList = list({
@@ -18,12 +24,32 @@ export const requestsList = list({
       options: [
         { label: 'Ожидание', value: RequestStatus.PENDING },
         { label: 'Принят', value: RequestStatus.FULFILLED },
+        { label: 'Доставлен', value: RequestStatus.DELIVERED },
+        { label: 'Отменен', value: RequestStatus.CANCELLED }, // user only
         { label: 'Отклонен', value: RequestStatus.REJECTED },
       ],
       type: 'enum',
       defaultValue: RequestStatus.PENDING,
     }),
     user: relationship({ ref: 'User', many: false }),
+    recipientName: text(),
+    recipientEmail: text(),
+    phone: text({ validation: { isRequired: true } }),
+    sum: integer({ validation: { isRequired: true } }),
+    address: text({ validation: { isRequired: true } }),
+    paymentType: select({
+      options: [
+        {
+          label: 'При получении',
+          value: PaymentType.RECEIVING,
+        },
+        {
+          label: 'Картой онлайн',
+          value: PaymentType.ONLINE,
+        },
+      ],
+      type: 'enum',
+    }),
     rejectReason: text(),
     createdAt: timestamp({ defaultValue: { kind: 'now' } }),
   },

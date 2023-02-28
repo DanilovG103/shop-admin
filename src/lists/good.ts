@@ -1,7 +1,6 @@
 import { graphql, list } from '@keystone-6/core'
 import {
   integer,
-  multiselect,
   relationship,
   select,
   text,
@@ -58,13 +57,6 @@ export const goodList = list({
       type: 'enum',
     }),
     category: relationship({ ref: 'Category', many: false }),
-    sizes: multiselect({
-      options: [
-        { value: 'XS', label: 'XS' },
-        { value: 'S', label: 'S' },
-        { value: 'M', label: 'M' },
-      ],
-    }),
     price: integer({ validation: { isRequired: true } }),
     images: relationship({
       ref: 'Image',

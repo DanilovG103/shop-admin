@@ -23,7 +23,7 @@ __export(keystone_exports, {
   default: () => keystone_default
 });
 module.exports = __toCommonJS(keystone_exports);
-var import_core12 = require("@keystone-6/core");
+var import_core13 = require("@keystone-6/core");
 
 // auth.ts
 var import_auth = require("@keystone-6/auth");
@@ -51,7 +51,6 @@ var import_access5 = require("@keystone-6/core/access");
 var import_fields9 = require("@keystone-6/core/fields");
 
 // src/lists/basket.ts
-var import_schema = require("@graphql-ts/schema");
 var import_core = require("@keystone-6/core");
 var import_access = require("@keystone-6/core/access");
 var import_fields2 = require("@keystone-6/core/fields");
@@ -110,8 +109,8 @@ var basketList = (0, import_core.list)({
     goods: (0, import_fields2.relationship)({ ref: "Good", many: true }),
     user: (0, import_fields2.relationship)({ ref: "User", many: false }),
     sum: (0, import_fields2.virtual)({
-      field: import_schema.graphql.field({
-        type: import_schema.graphql.Int,
+      field: import_core.graphql.field({
+        type: import_core.graphql.Int,
         async resolve(item, args, ctx) {
           const data = await ctx.query.Basket.findMany({
             where: {
@@ -170,13 +169,6 @@ var goodList = (0, import_core2.list)({
       type: "enum"
     }),
     category: (0, import_fields3.relationship)({ ref: "Category", many: false }),
-    sizes: (0, import_fields3.multiselect)({
-      options: [
-        { value: "XS", label: "XS" },
-        { value: "S", label: "S" },
-        { value: "M", label: "M" }
-      ]
-    }),
     price: (0, import_fields3.integer)({ validation: { isRequired: true } }),
     images: (0, import_fields3.relationship)({
       ref: "Image",
@@ -317,12 +309,32 @@ var requestsList = (0, import_core5.list)({
       options: [
         { label: "\u041E\u0436\u0438\u0434\u0430\u043D\u0438\u0435", value: "PENDING" /* PENDING */ },
         { label: "\u041F\u0440\u0438\u043D\u044F\u0442", value: "FULFILLED" /* FULFILLED */ },
+        { label: "\u0414\u043E\u0441\u0442\u0430\u0432\u043B\u0435\u043D", value: "DELIVERED" /* DELIVERED */ },
+        { label: "\u041E\u0442\u043C\u0435\u043D\u0435\u043D", value: "CANCELLED" /* CANCELLED */ },
         { label: "\u041E\u0442\u043A\u043B\u043E\u043D\u0435\u043D", value: "REJECTED" /* REJECTED */ }
       ],
       type: "enum",
       defaultValue: "PENDING" /* PENDING */
     }),
     user: (0, import_fields6.relationship)({ ref: "User", many: false }),
+    recipientName: (0, import_fields6.text)(),
+    recipientEmail: (0, import_fields6.text)(),
+    phone: (0, import_fields6.text)({ validation: { isRequired: true } }),
+    sum: (0, import_fields6.integer)({ validation: { isRequired: true } }),
+    address: (0, import_fields6.text)({ validation: { isRequired: true } }),
+    paymentType: (0, import_fields6.select)({
+      options: [
+        {
+          label: "\u041F\u0440\u0438 \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u0438\u0438",
+          value: "RECEIVING" /* RECEIVING */
+        },
+        {
+          label: "\u041A\u0430\u0440\u0442\u043E\u0439 \u043E\u043D\u043B\u0430\u0439\u043D",
+          value: "ONLINE" /* ONLINE */
+        }
+      ],
+      type: "enum"
+    }),
     rejectReason: (0, import_fields6.text)(),
     createdAt: (0, import_fields6.timestamp)({ defaultValue: { kind: "now" } })
   },
@@ -531,6 +543,42 @@ var updateMyBasket = (base) => {
   });
 };
 
+// src/ext/addresses.ts
+var import_core12 = require("@keystone-6/core");
+var type = import_core12.graphql.object()({
+  name: "Address",
+  fields: {
+    value: import_core12.graphql.field({
+      type: import_core12.graphql.list(import_core12.graphql.String),
+      resolve(value) {
+        return value;
+      }
+    })
+  }
+});
+var addresses = import_core12.graphql.field({
+  type,
+  args: {
+    query: import_core12.graphql.arg({ type: import_core12.graphql.String })
+  },
+  async resolve(_, { query }) {
+    const url = "https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address";
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: "Token " + process.env.DADATA_API_KEY
+      },
+      body: JSON.stringify({ query })
+    };
+    const response = await fetch(url, options);
+    const data = await response.json();
+    const value = data.suggestions.map((item) => item.value);
+    return value;
+  }
+});
+
 // storage.ts
 var storage = {
   images: {
@@ -561,13 +609,12 @@ var onConnect = async (ctx) => {
   });
 };
 var keystone_default = withAuth(
-  (0, import_core12.config)({
+  (0, import_core13.config)({
     db: {
       provider: "sqlite",
       url: "file:./keystone.db",
       useMigrations: true,
-      onConnect,
-      enableLogging: true
+      onConnect
     },
     ui: {
       isAccessAllowed: isAdmin
@@ -579,8 +626,11 @@ var keystone_default = withAuth(
       port: 8e3,
       cors: true
     },
-    extendGraphqlSchema: import_core12.graphql.extend((base) => {
+    extendGraphqlSchema: import_core13.graphql.extend((base) => {
       return {
+        query: {
+          addresses
+        },
         mutation: {
           registration: registration(base),
           updateMyFavorite: updateMyFavorite(base),

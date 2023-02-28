@@ -1,12 +1,11 @@
-import { graphql } from '@graphql-ts/schema'
-import { list } from '@keystone-6/core'
+import { graphql, list } from '@keystone-6/core'
 import { allOperations, allowAll } from '@keystone-6/core/access'
 import { relationship, virtual } from '@keystone-6/core/fields'
+import type { BaseItem } from '@keystone-6/core/types'
 
 import { isAdmin } from '../utils'
 
-interface Item {
-  id: string
+interface Item extends BaseItem {
   userId: string
 }
 
@@ -30,7 +29,7 @@ export const basketList = list({
       field: graphql.field({
         type: graphql.Int,
         async resolve(item, args, ctx) {
-          const data: GoodQuery[] = await ctx.query.Basket.findMany({
+          const data = (await ctx.query.Basket.findMany({
             where: {
               user: {
                 id: {
@@ -39,7 +38,7 @@ export const basketList = list({
               },
             },
             query: 'goods { price }',
-          })
+          })) as GoodQuery[]
 
           const resolved: number[] = data[0]
             ? data[0].goods.map((el) => el.price)

@@ -145,7 +145,6 @@ type Good {
   brand: Brand
   audienceCategory: GoodAudienceCategoryType
   category: Category
-  sizes: [String!]
   price: Int
   images(where: ImageWhereInput! = {}, orderBy: [ImageOrderByInput!]! = [], take: Int, skip: Int! = 0): [Image!]
   imagesCount(where: ImageWhereInput! = {}): Int
@@ -218,7 +217,6 @@ input GoodUpdateInput {
   brand: BrandRelateToOneForUpdateInput
   audienceCategory: GoodAudienceCategoryType
   category: CategoryRelateToOneForUpdateInput
-  sizes: [String!]
   price: Int
   images: ImageRelateToManyForUpdateInput
   createdAt: DateTime
@@ -254,7 +252,6 @@ input GoodCreateInput {
   brand: BrandRelateToOneForCreateInput
   audienceCategory: GoodAudienceCategoryType
   category: CategoryRelateToOneForCreateInput
-  sizes: [String!]
   price: Int
   images: ImageRelateToManyForCreateInput
   createdAt: DateTime
@@ -385,6 +382,12 @@ type Request {
   goodsCount(where: GoodWhereInput! = {}): Int
   status: RequestStatusType
   user: User
+  recipientName: String
+  recipientEmail: String
+  phone: String
+  sum: Int
+  address: String
+  paymentType: RequestPaymentTypeType
   rejectReason: String
   createdAt: DateTime
 }
@@ -392,7 +395,14 @@ type Request {
 enum RequestStatusType {
   PENDING
   FULFILLED
+  DELIVERED
+  CANCELLED
   REJECTED
+}
+
+enum RequestPaymentTypeType {
+  RECEIVING
+  ONLINE
 }
 
 input RequestWhereUniqueInput {
@@ -407,6 +417,12 @@ input RequestWhereInput {
   goods: GoodManyRelationFilter
   status: RequestStatusTypeNullableFilter
   user: UserWhereInput
+  recipientName: StringFilter
+  recipientEmail: StringFilter
+  phone: StringFilter
+  sum: IntFilter
+  address: StringFilter
+  paymentType: RequestPaymentTypeTypeNullableFilter
   rejectReason: StringFilter
   createdAt: DateTimeNullableFilter
 }
@@ -418,9 +434,22 @@ input RequestStatusTypeNullableFilter {
   not: RequestStatusTypeNullableFilter
 }
 
+input RequestPaymentTypeTypeNullableFilter {
+  equals: RequestPaymentTypeType
+  in: [RequestPaymentTypeType!]
+  notIn: [RequestPaymentTypeType!]
+  not: RequestPaymentTypeTypeNullableFilter
+}
+
 input RequestOrderByInput {
   id: OrderDirection
   status: OrderDirection
+  recipientName: OrderDirection
+  recipientEmail: OrderDirection
+  phone: OrderDirection
+  sum: OrderDirection
+  address: OrderDirection
+  paymentType: OrderDirection
   rejectReason: OrderDirection
   createdAt: OrderDirection
 }
@@ -429,6 +458,12 @@ input RequestUpdateInput {
   goods: GoodRelateToManyForUpdateInput
   status: RequestStatusType
   user: UserRelateToOneForUpdateInput
+  recipientName: String
+  recipientEmail: String
+  phone: String
+  sum: Int
+  address: String
+  paymentType: RequestPaymentTypeType
   rejectReason: String
   createdAt: DateTime
 }
@@ -442,6 +477,12 @@ input RequestCreateInput {
   goods: GoodRelateToManyForCreateInput
   status: RequestStatusType
   user: UserRelateToOneForCreateInput
+  recipientName: String
+  recipientEmail: String
+  phone: String
+  sum: Int
+  address: String
+  paymentType: RequestPaymentTypeType
   rejectReason: String
   createdAt: DateTime
 }
@@ -675,6 +716,11 @@ type Query {
   imagesCount(where: ImageWhereInput! = {}): Int
   keystone: KeystoneMeta!
   authenticatedItem: AuthenticatedItem
+  addresses(query: String): Address
+}
+
+type Address {
+  value: [String]
 }
 
 union AuthenticatedItem = User
