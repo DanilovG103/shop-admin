@@ -14,22 +14,20 @@ import { isAdmin } from './src/utils'
 import { storage } from './storage'
 
 const onConnect = async (ctx: Context) => {
-  setTimeout(async () => {
-    const user = await ctx.db.User.findOne({
-      where: { email: process.env.ADMIN_EMAIL },
-    })
+  const user = await ctx.db.User.findOne({
+    where: { email: process.env.ADMIN_EMAIL },
+  })
 
-    if (user) return
+  if (user) return
 
-    await ctx.db.User.createOne({
-      data: {
-        name: process.env.ADMIN_NAME,
-        email: process.env.ADMIN_EMAIL,
-        password: process.env.ADMIN_PASSWORD,
-        role: Role.ADMIN,
-      },
-    })
-  }, 5000)
+  await ctx.db.User.createOne({
+    data: {
+      name: process.env.ADMIN_NAME,
+      email: process.env.ADMIN_EMAIL,
+      password: process.env.ADMIN_PASSWORD,
+      role: Role.ADMIN,
+    },
+  })
 }
 
 export default withAuth(
