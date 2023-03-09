@@ -717,6 +717,7 @@ type Query {
   keystone: KeystoneMeta!
   authenticatedItem: AuthenticatedItem
   addresses(query: String): Address
+  myRequests(take: Int!, skip: Int!): [Request]
 }
 
 type Address {

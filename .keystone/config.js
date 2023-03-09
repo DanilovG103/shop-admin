@@ -23,7 +23,7 @@ __export(keystone_exports, {
   default: () => keystone_default
 });
 module.exports = __toCommonJS(keystone_exports);
-var import_core13 = require("@keystone-6/core");
+var import_core14 = require("@keystone-6/core");
 
 // auth.ts
 var import_auth = require("@keystone-6/auth");
@@ -56,7 +56,7 @@ var import_access = require("@keystone-6/core/access");
 var import_fields2 = require("@keystone-6/core/fields");
 
 // src/utils/get-user.ts
-var getUserFromSession = async (ctx, query, noUserValue) => {
+var getUserFromSession = async (ctx, query = "id", noUserValue) => {
   const ses = ctx.session;
   if (!ses) {
     return noUserValue;
@@ -579,6 +579,44 @@ var addresses = import_core12.graphql.field({
   }
 });
 
+// src/ext/my-requests.ts
+var import_core13 = require("@keystone-6/core");
+var getMyRequests = (base) => {
+  const field = import_core13.graphql.field({
+    type: import_core13.graphql.list(base.object("Request")),
+    args: {
+      take: import_core13.graphql.arg({ type: import_core13.graphql.nonNull(import_core13.graphql.Int) }),
+      skip: import_core13.graphql.arg({ type: import_core13.graphql.nonNull(import_core13.graphql.Int) })
+    },
+    async resolve(_, { take, skip }, ctx) {
+      const user = await getUserFromSession(ctx);
+      if (!user)
+        return null;
+      const data = await ctx.query.Request.findMany({
+        take,
+        skip,
+        where: {
+          user: {
+            id: {
+              equals: user.id
+            }
+          }
+        },
+        query: `
+          id
+          status
+          createdAt
+        `
+      });
+      return data.map((item) => ({
+        ...item,
+        createdAt: new Date(item.createdAt)
+      }));
+    }
+  });
+  return field;
+};
+
 // storage.ts
 var storage = {
   images: {
@@ -609,7 +647,7 @@ var onConnect = async (ctx) => {
   });
 };
 var keystone_default = withAuth(
-  (0, import_core13.config)({
+  (0, import_core14.config)({
     db: {
       provider: "sqlite",
       url: "file:./keystone.db",
@@ -624,12 +662,16 @@ var keystone_default = withAuth(
     storage,
     server: {
       port: 8e3,
-      cors: true
+      cors: true,
+      extendExpressApp: (app) => {
+        app.set("trust proxy", true);
+      }
     },
-    extendGraphqlSchema: import_core13.graphql.extend((base) => {
+    extendGraphqlSchema: import_core14.graphql.extend((base) => {
       return {
         query: {
-          addresses
+          addresses,
+          myRequests: getMyRequests(base)
         },
         mutation: {
           registration: registration(base),

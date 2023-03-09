@@ -6,6 +6,7 @@ import { lists } from './schema'
 import { Role } from './src/enums'
 import {
   addresses,
+  getMyRequests,
   registration,
   updateMyBasket,
   updateMyFavorite,
@@ -48,11 +49,15 @@ export default withAuth(
     server: {
       port: 8000,
       cors: true,
+      extendExpressApp: (app) => {
+        app.set('trust proxy', true)
+      },
     },
     extendGraphqlSchema: graphql.extend((base) => {
       return {
         query: {
           addresses,
+          myRequests: getMyRequests(base),
         },
         mutation: {
           registration: registration(base),

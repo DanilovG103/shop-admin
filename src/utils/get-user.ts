@@ -10,7 +10,7 @@ interface User {
 
 export const getUserFromSession = async (
   ctx: Context,
-  query?: keyof User,
+  query: keyof User = 'id',
   noUserValue?: false | null | '',
 ): Promise<User | typeof noUserValue> => {
   const ses = ctx.session
