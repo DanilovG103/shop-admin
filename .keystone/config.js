@@ -663,12 +663,9 @@ var keystone_default = withAuth(
     storage,
     server: {
       port: 8e3,
-      cors: {
-        credentials: true,
-        origin: [process.env.CORS_ORIGIN ?? "http://localhost:3000"]
-      },
+      cors: { credentials: true, origin: true },
       extendExpressApp: (app) => {
-        app.set("trust proxy", true);
+        app.set("trust proxy", 1);
       }
     },
     extendGraphqlSchema: import_core14.graphql.extend((base) => {
