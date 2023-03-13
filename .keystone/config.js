@@ -606,6 +606,7 @@ var getMyRequests = (base) => {
           id
           status
           createdAt
+          sum
         `
       });
       return data.map((item) => ({

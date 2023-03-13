@@ -29,6 +29,7 @@ export const getMyRequests = (base: graphql.BaseSchemaMeta) => {
           id
           status
           createdAt
+          sum
         `,
       })
 
