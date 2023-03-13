@@ -48,9 +48,9 @@ export default withAuth(
     storage,
     server: {
       port: 8000,
-      cors: { credentials: true, origin: true },
+      cors: true,
       extendExpressApp: (app) => {
-        app.set('trust proxy', 1)
+        app.set('trust proxy', true)
       },
     },
     extendGraphqlSchema: graphql.extend((base) => {
