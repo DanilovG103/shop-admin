@@ -663,7 +663,10 @@ var keystone_default = withAuth(
     storage,
     server: {
       port: 8e3,
-      cors: { credentials: true, origin: true },
+      cors: {
+        credentials: true,
+        origin: [process.env.CORS_ORIGIN ?? "http://localhost:3000"]
+      },
       extendExpressApp: (app) => {
         app.set("trust proxy", true);
       }

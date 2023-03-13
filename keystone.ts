@@ -48,7 +48,10 @@ export default withAuth(
     storage,
     server: {
       port: 8000,
-      cors: { credentials: true, origin: true },
+      cors: {
+        credentials: true,
+        origin: [process.env.CORS_ORIGIN ?? 'http://localhost:3000'],
+      },
       extendExpressApp: (app) => {
         app.set('trust proxy', true)
       },
