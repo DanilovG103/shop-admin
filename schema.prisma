@@ -64,7 +64,7 @@ model Brand {
 model Request {
   id             String    @id @default(cuid())
   goods          Good[]    @relation("Request_goods")
-  status         String?   @default("PENDING")
+  status         String?   @default("CREATED")
   user           User?     @relation("Request_user", fields: [userId], references: [id])
   userId         String?   @map("user")
   recipientName  String    @default("")

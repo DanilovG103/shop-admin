@@ -43,6 +43,7 @@ var sessionMaxAge = 60 * 60 * 24 * 30;
 var session = (0, import_session.statelessSessions)({
   maxAge: sessionMaxAge,
   secret: sessionSecret,
+  secure: true,
   sameSite: "none"
 });
 
@@ -308,14 +309,14 @@ var requestsList = (0, import_core5.list)({
     goods: (0, import_fields6.relationship)({ ref: "Good", many: true }),
     status: (0, import_fields6.select)({
       options: [
-        { label: "\u041E\u0436\u0438\u0434\u0430\u043D\u0438\u0435", value: "PENDING" /* PENDING */ },
+        { label: "\u0421\u043E\u0437\u0434\u0430\u043D", value: "CREATED" /* CREATED */ },
         { label: "\u041F\u0440\u0438\u043D\u044F\u0442", value: "FULFILLED" /* FULFILLED */ },
         { label: "\u0414\u043E\u0441\u0442\u0430\u0432\u043B\u0435\u043D", value: "DELIVERED" /* DELIVERED */ },
         { label: "\u041E\u0442\u043C\u0435\u043D\u0435\u043D", value: "CANCELLED" /* CANCELLED */ },
         { label: "\u041E\u0442\u043A\u043B\u043E\u043D\u0435\u043D", value: "REJECTED" /* REJECTED */ }
       ],
       type: "enum",
-      defaultValue: "PENDING" /* PENDING */
+      defaultValue: "CREATED" /* CREATED */
     }),
     user: (0, import_fields6.relationship)({ ref: "User", many: false }),
     recipientName: (0, import_fields6.text)(),

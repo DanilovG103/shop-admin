@@ -22,14 +22,14 @@ export const requestsList = list({
     goods: relationship({ ref: 'Good', many: true }),
     status: select({
       options: [
-        { label: 'Ожидание', value: RequestStatus.PENDING },
+        { label: 'Создан', value: RequestStatus.CREATED },
         { label: 'Принят', value: RequestStatus.FULFILLED },
         { label: 'Доставлен', value: RequestStatus.DELIVERED },
         { label: 'Отменен', value: RequestStatus.CANCELLED }, // user only
         { label: 'Отклонен', value: RequestStatus.REJECTED },
       ],
       type: 'enum',
-      defaultValue: RequestStatus.PENDING,
+      defaultValue: RequestStatus.CREATED,
     }),
     user: relationship({ ref: 'User', many: false }),
     recipientName: text(),
