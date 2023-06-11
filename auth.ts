@@ -21,7 +21,7 @@ const session = statelessSessions({
   maxAge: sessionMaxAge,
   secret: sessionSecret!,
   secure: true,
-  sameSite: 'none',
+  sameSite: 'lax',
 })
 
 export { withAuth, session }
